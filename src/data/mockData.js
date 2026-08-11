@@ -1,7 +1,7 @@
 export const user = {
-  name: "Aarav Sharma",
-  initials: "AS",
-  handle: "@aarav",
+  name: "pradeep nagaral",
+  initials: "PN",
+  handle: "@pradeep",
   role: "Student · Final Year",
 };
 

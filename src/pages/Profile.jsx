@@ -171,7 +171,7 @@ export default function Profile() {
               <Mail size={16} className="text-muted" />
               <div>
                 <p className="text-[13px] font-semibold text-ink">Email</p>
-                <p className="text-xs text-muted">aarav.sharma@example.com</p>
+                <p className="text-xs text-muted">pradeep.nagaral@example.com</p>
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-xl border border-line bg-cream/50 p-3.5">

@@ -1244,7 +1244,7 @@ footer {
   }
 
   .hero h1 {
-    font-size: 46px;
+    font-size: clamp(30px, 8.5vw, 46px);
   }
 
   .hero-art {
@@ -1266,7 +1266,12 @@ footer {
   }
 
   .section h2 {
-    font-size: 34px;
+    font-size: 28px;
+  }
+
+  .matching-copy h2,
+  .cta-copy h2 {
+    font-size: 28px;
   }
 
   .problem-grid,

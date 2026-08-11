@@ -29,8 +29,8 @@ export default function CommunityFeed() {
     setPosts((current) => [
       {
         id: `p${Date.now()}`,
-        author: "Aarav Sharma",
-        initials: "AS",
+        author: "pradeep nagaral",
+        initials: "PN",
         time: "Just now",
         tags: ["#newpost"],
         likes: 0,

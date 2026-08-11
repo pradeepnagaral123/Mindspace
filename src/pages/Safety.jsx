@@ -86,7 +86,7 @@ export default function Safety() {
         </p>
       </div>
 
-      <Card className="relative overflow-hidden bg-navy p-6 text-white sm:p-8">
+      <Card className="relative overflow-hidden bg-navy! p-6 text-white sm:p-8">
         <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-mint/10" />
         <div className="absolute -bottom-16 -left-10 h-48 w-48 rounded-full bg-blossom/10" />
         <div className="relative flex flex-wrap items-center gap-6">
