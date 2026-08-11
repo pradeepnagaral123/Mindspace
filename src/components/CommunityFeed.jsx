@@ -81,7 +81,7 @@ export default function CommunityFeed() {
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {visiblePosts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
