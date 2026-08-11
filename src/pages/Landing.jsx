@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../index.css";
+import sittingWomen from "../images/sitting_women.png";
 
 const communities = [
   { icon: "🌱", title: "Stress & Anxiety", members: "12.4k members" },
@@ -186,15 +187,11 @@ function Landing() {
           </div>
 
           <div className="problem-art">
-            <div className="blob"></div>
-            <div className="sitting-person">
-              <div className="head"></div>
-              <div className="hair"></div>
-              <div className="body"></div>
-              <div className="leg"></div>
-              <div className="shoe"></div>
-            </div>
-            <div className="plant">♧</div>
+            <img
+              className="sitting-women-img"
+              src={sittingWomen}
+              alt="A young woman sitting on the ground with her knees pulled to her chest"
+            />
           </div>
         </div>
 
