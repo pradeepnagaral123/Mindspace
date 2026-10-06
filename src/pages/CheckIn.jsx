@@ -5,6 +5,9 @@ import Card from "../components/Card";
 import MoodCheckIn from "../components/MoodCheckIn";
 import { checkInMetrics, moodOptions } from "../data/mockData";
 import Icon from "../components/icons";
+import { useAuth } from "../context/AuthContext";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const weekTrend = [
   { day: "Mon", mood: "okay", value: 3 },
@@ -31,11 +34,14 @@ const reflections = [
 
 export default function CheckIn() {
   const navigate = useNavigate();
+  const { token } = useAuth();
   const [metrics, setMetrics] = useState(
     Object.fromEntries(checkInMetrics.map((metric) => [metric.label, metric.value])),
   );
   const [mood, setMood] = useState("good");
   const [reflection, setReflection] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const activeMood = moodOptions.find((option) => option.id === mood);
 
@@ -44,6 +50,32 @@ export default function CheckIn() {
 
   const setMetric = (label, value) => {
     setMetrics((current) => ({ ...current, [label]: value }));
+    setSaved(false);
+  };
+
+  const saveCheckIn = async () => {
+    if (!token || saving) return;
+    setSaving(true);
+    setSaved(false);
+    try {
+      const res = await fetch(`${API_URL}/moods`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          mood,
+          stress: metrics.Stress,
+          energy: metrics.Energy,
+        }),
+      });
+      if (res.ok) setSaved(true);
+    } catch {
+      // silently fail
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -117,16 +149,20 @@ export default function CheckIn() {
                   className="w-full accent-[#2fae7f]"
                 />
                 <div className="mt-0.5 flex justify-between px-0.5 text-[11px] text-muted">
-                  <span>Hard</span>
-                  <span>Gentle</span>
+                  <span>Low</span>
+                  <span>High</span>
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-4 flex items-center gap-2 rounded-xl bg-mint-soft px-3.5 py-2.5 text-[12px] font-medium text-mint-deep">
-            <Check size={14} />
-            All saved — you can update this anytime.
-          </div>
+          <button
+            onClick={saveCheckIn}
+            disabled={saving}
+            className="mt-4 flex items-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-navy-2 disabled:opacity-50"
+          >
+            {saved ? <Check size={14} /> : null}
+            {saving ? "Saving..." : saved ? "Saved!" : "Save check-in"}
+          </button>
         </Card>
 
         <Card className="flex flex-col p-5">

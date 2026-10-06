@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   AtSign,
   Check,
@@ -11,7 +12,9 @@ import {
 } from "lucide-react";
 import Card from "../components/Card";
 import Avatar from "../components/Avatar";
-import { user } from "../data/mockData";
+import { useAuth } from "../context/AuthContext";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const interests = [
   "Anxiety",
@@ -22,19 +25,43 @@ const interests = [
   "Breathwork",
 ];
 
-const stats = [
-  { label: "Check-ins", value: "9" },
-  { label: "Connections", value: "12" },
-  { label: "Communities", value: "3" },
-  { label: "Journal entries", value: "24" },
-];
-
 export default function Profile() {
+  const { user, token } = useAuth();
   const [editing, setEditing] = useState(false);
+  const [journalCount, setJournalCount] = useState(0);
+  const [connectionCount, setConnectionCount] = useState(0);
+  const [moodCount, setMoodCount] = useState(0);
+
+  useEffect(() => {
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
+
+    fetch(`${API_URL}/journals/count`, { headers })
+      .then((r) => r.ok && r.json())
+      .then((d) => { if (d) setJournalCount(d.count); })
+      .catch(() => {});
+
+    fetch(`${API_URL}/connections/count`, { headers })
+      .then((r) => r.ok && r.json())
+      .then((d) => { if (d) setConnectionCount(d.count); })
+      .catch(() => {});
+
+    fetch(`${API_URL}/moods/stats`, { headers })
+      .then((r) => r.ok && r.json())
+      .then((d) => { if (d) setMoodCount(d.totalCheckIns); })
+      .catch(() => {});
+  }, [token]);
+
+  const stats = [
+    { label: "Check-ins", value: String(moodCount), to: "/check-in-history" },
+    { label: "Connections", value: String(connectionCount) },
+    { label: "Communities", value: "3" },
+    { label: "Journal entries", value: String(journalCount) },
+  ];
   const [form, setForm] = useState({
-    name: user.name,
-    handle: user.handle,
-    role: user.role,
+    name: user?.name || "",
+    handle: user?.email ? `@${user.email.split("@")[0]}` : "",
+    role: "Student",
     bio: "Final-year student finding calm between deadlines. Here to listen and be heard.",
   });
 
@@ -101,19 +128,35 @@ export default function Profile() {
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-2xl border border-line bg-cream/50 p-3.5 text-center"
-              >
-                <p className="font-display text-xl font-semibold text-ink">
-                  {stat.value}
-                </p>
+            {stats.map((stat) => {
+              const content = (
                 <p className="text-[11px] font-medium text-muted">
                   {stat.label}
                 </p>
-              </div>
-            ))}
+              );
+              return stat.to ? (
+                <Link
+                  key={stat.label}
+                  to={stat.to}
+                  className="rounded-2xl border border-line bg-cream/50 p-3.5 text-center transition-colors hover:bg-mint-soft/50 hover:border-mint/40"
+                >
+                  <p className="font-display text-xl font-semibold text-ink">
+                    {stat.value}
+                  </p>
+                  {content}
+                </Link>
+              ) : (
+                <div
+                  key={stat.label}
+                  className="rounded-2xl border border-line bg-cream/50 p-3.5 text-center"
+                >
+                  <p className="font-display text-xl font-semibold text-ink">
+                    {stat.value}
+                  </p>
+                  {content}
+                </div>
+              );
+            })}
           </div>
         </div>
       </Card>
@@ -171,7 +214,7 @@ export default function Profile() {
               <Mail size={16} className="text-muted" />
               <div>
                 <p className="text-[13px] font-semibold text-ink">Email</p>
-                <p className="text-xs text-muted">pradeep.nagaral@example.com</p>
+                <p className="text-xs text-muted">{user?.email || ""}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-xl border border-line bg-cream/50 p-3.5">

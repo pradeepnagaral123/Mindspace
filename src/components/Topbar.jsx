@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { Bell, Menu, Search, X } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
 import Avatar from "./Avatar";
-import { useSearch } from "../context/SearchContext";
-import { user } from "../data/mockData";
+import { useAuth } from "../context/AuthContext";
 
 export default function Topbar({ onMenu }) {
-  const { query, setQuery } = useSearch();
+  const { user } = useAuth();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const notifications = [
@@ -22,28 +21,6 @@ export default function Topbar({ onMenu }) {
       >
         <Menu size={22} />
       </button>
-
-      <div className="relative max-w-xl flex-1">
-        <Search
-          size={18}
-          className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-muted"
-        />
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search anything..."
-          className="w-full rounded-2xl border border-line bg-white py-2.5 pr-10 pl-11 text-sm text-ink shadow-sm outline-none placeholder:text-muted/70 focus:border-mint-deep focus:ring-2 focus:ring-mint/40"
-        />
-        {query && (
-          <button
-            onClick={() => setQuery("")}
-            className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1 text-muted hover:bg-line/60 hover:text-ink"
-            aria-label="Clear search"
-          >
-            <X size={14} />
-          </button>
-        )}
-      </div>
 
       <div className="relative ml-auto flex items-center gap-2 sm:gap-3">
         <div className="relative">

@@ -1,7 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 import "../index.css";
 import sittingWomen from "../images/sitting_women.png";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const communities = [
   { icon: "🌱", title: "Stress & Anxiety", members: "12.4k members" },
@@ -42,7 +45,17 @@ const resources = [
 function Landing() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("signin");
+  const [authError, setAuthError] = useState("");
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (searchParams.get("auth") === "failed") {
+      setAuthOpen(true);
+      setAuthError("Google sign-in failed. Please try again.");
+      navigate("/", { replace: true });
+    }
+  }, []);
 
   return (
     <div className="app">
@@ -502,6 +515,7 @@ function Landing() {
         <AuthModal
           mode={authMode}
           setMode={setAuthMode}
+          initialError={authError}
           onClose={() => setAuthOpen(false)}
           onSuccess={() => navigate("/dashboard")}
         />
@@ -539,10 +553,18 @@ function Problem({ icon, title, children }) {
 function Step({ number, icon, title, children }) {
   return (
     <div className="step">
-      <div className="step-number">{number}</div>
-      <div className="step-icon">{icon}</div>
+      <div className="step-header">
+        <span className="step-badge">{number}</span>
+        <div className="step-icon">{icon}</div>
+      </div>
       <h3>{title}</h3>
       <p>{children}</p>
+      <div className="step-footer">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
     </div>
   );
 }
@@ -605,19 +627,37 @@ function FooterColumn({ title, links }) {
   );
 }
 
-function AuthModal({ mode, setMode, onClose, onSuccess }) {
+function AuthModal({ mode, setMode, initialError = "", onClose, onSuccess }) {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [error, setError] = useState(initialError);
+  const [submitting, setSubmitting] = useState(false);
+  const { login, register } = useAuth();
 
-  const update = (field) => (event) =>
+  const update = (field) => (event) => {
+    setError("");
     setForm({ ...form, [field]: event.target.value });
+  };
 
   const handleBackdrop = (event) => {
     if (event.target === event.currentTarget) onClose();
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    onSuccess();
+    setError("");
+    setSubmitting(true);
+    try {
+      if (mode === "signin") {
+        await login(form.email, form.password);
+      } else {
+        await register(form.name, form.email, form.password);
+      }
+      onSuccess();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -702,8 +742,14 @@ function AuthModal({ mode, setMode, onClose, onSuccess }) {
             </p>
           )}
 
-          <button type="submit" className="auth-submit">
-            {mode === "signin" ? "Sign In" : "Create Account"}
+          {error && <p className="auth-error">{error}</p>}
+
+          <button type="submit" className="auth-submit" disabled={submitting}>
+            {submitting
+              ? "Please wait..."
+              : mode === "signin"
+              ? "Sign In"
+              : "Create Account"}
           </button>
         </form>
 
@@ -711,7 +757,12 @@ function AuthModal({ mode, setMode, onClose, onSuccess }) {
           <span>or continue with</span>
         </div>
 
-        <button className="auth-google">
+        <button
+          className="auth-google"
+          onClick={() => {
+            window.location.href = `${API_URL}/auth/google`;
+          }}
+        >
           <span className="google-g">G</span> Continue with Google
         </button>
 

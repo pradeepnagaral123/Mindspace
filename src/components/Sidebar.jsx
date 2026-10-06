@@ -14,9 +14,10 @@ import {
   Heart,
   X,
   Sparkle,
+  PenLine,
 } from "lucide-react";
 import Avatar from "./Avatar";
-import { user } from "../data/mockData";
+import { useAuth } from "../context/AuthContext";
 
 const mainNav = [
   { to: "/dashboard", label: "Home", icon: Home },
@@ -25,6 +26,7 @@ const mainNav = [
   { to: "/messages", label: "Messages", icon: MessageCircle, badge: 3 },
   { to: "/check-in", label: "Check-in", icon: ClipboardList },
   { to: "/resources", label: "Resources", icon: BookOpen },
+  { to: "/journal", label: "Journal", icon: PenLine },
   { to: "/events", label: "Events", icon: Calendar },
   { to: "/saved", label: "Saved", icon: Bookmark },
 ];
@@ -59,6 +61,7 @@ function NavItem({ to, label, icon: Icon, badge, onClick }) {
 }
 
 export default function Sidebar({ open, onClose }) {
+  const { user } = useAuth();
   return (
     <>
       {open && (

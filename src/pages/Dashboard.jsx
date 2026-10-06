@@ -9,21 +9,21 @@ import EmergencySupportCard from "../components/EmergencySupportCard";
 
 export default function Dashboard() {
   return (
-    <div className="space-y-6 lg:space-y-8">
-      <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+    <div className="space-y-5 lg:space-y-6">
+      <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
         <MoodCheckIn className="lg:col-span-2" />
         <QuoteCard />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
         <ConnectionsCard />
         <RecommendedCommunities />
         <DailyCheckIn />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
         <CommunityFeed />
-        <div className="space-y-6 lg:space-y-8">
+        <div className="space-y-5 lg:space-y-6">
           <UpcomingEvents />
           <EmergencySupportCard />
         </div>

@@ -1,63 +1,105 @@
-import { useState } from "react";
-import { Lock, PenLine, Plus, Send } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Lock, PenLine, Plus, Send, Trash2 } from "lucide-react";
 import Card from "../components/Card";
 import Icon from "../components/icons";
 import { moodOptions } from "../data/mockData";
+import { useAuth } from "../context/AuthContext";
 
-const initialEntries = [
-  {
-    id: "j1",
-    date: "Today · 8:40 AM",
-    mood: "good",
-    title: "A calmer morning",
-    text: "I woke up before my alarm and took five minutes just to sit by the window. No phone, no noise. It's a small thing, but it set a softer tone for the whole day.",
-  },
-  {
-    id: "j2",
-    date: "Yesterday · 9:15 PM",
-    mood: "low",
-    title: "Heavy, but honest",
-    text: "Today was hard. I felt low most of the afternoon and didn't want to talk to anyone. I went for a walk in the evening and it helped a little. I'm trying to be gentle with myself about it.",
-  },
-  {
-    id: "j3",
-    date: "Aug 8 · 7:30 PM",
-    mood: "okay",
-    title: "Assignment done",
-    text: "Finally wrapped up the project that's been hanging over me. I feel neutral rather than relieved — but neutral is okay. One step at a time.",
-  },
-  {
-    id: "j4",
-    date: "Aug 7 · 8:05 PM",
-    mood: "great",
-    title: "Reconnected with Maya",
-    text: "Met Maya after a long time. We just talked and laughed for an hour. I forgot how much connection fills my tank. I want more of this.",
-  },
-];
+const API_URL = import.meta.env.VITE_API_URL;
+
+function formatRelativeDate(dateStr) {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHrs = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+  });
+}
 
 export default function Journal() {
-  const [entries, setEntries] = useState(initialEntries);
+  const { token } = useAuth();
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [composing, setComposing] = useState(false);
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [mood, setMood] = useState("okay");
+  const [saving, setSaving] = useState(false);
 
-  const submit = () => {
-    if (!text.trim()) return;
-    setEntries((current) => [
-      {
-        id: `j${Date.now()}`,
-        date: "Just now",
-        mood,
-        title: title.trim() || "Untitled entry",
-        text: text.trim(),
-      },
-      ...current,
-    ]);
-    setTitle("");
-    setText("");
-    setMood("okay");
-    setComposing(false);
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+
+  useEffect(() => {
+    fetchEntries();
+  }, []);
+
+  const fetchEntries = async () => {
+    try {
+      const res = await fetch(`${API_URL}/journals`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setEntries(data.journals);
+      }
+    } catch (error) {
+      console.error("Failed to fetch journals:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submit = async () => {
+    if (!text.trim() || saving) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`${API_URL}/journals`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          title: title.trim() || "Untitled entry",
+          text: text.trim(),
+          mood,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEntries((current) => [data.journal, ...current]);
+        setTitle("");
+        setText("");
+        setMood("okay");
+        setComposing(false);
+      }
+    } catch (error) {
+      console.error("Failed to save journal:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteEntry = async (id) => {
+    try {
+      const res = await fetch(`${API_URL}/journals/${id}`, {
+        method: "DELETE",
+        headers,
+      });
+      if (res.ok) {
+        setEntries((current) => current.filter((e) => e._id !== id));
+      }
+    } catch (error) {
+      console.error("Failed to delete journal:", error);
+    }
   };
 
   const moodFor = (id) =>
@@ -134,50 +176,67 @@ export default function Journal() {
           <div className="mt-2 flex items-center justify-end border-t border-line/70 pt-3">
             <button
               onClick={submit}
-              disabled={!text.trim()}
+              disabled={!text.trim() || saving}
               className="flex items-center gap-2 rounded-xl bg-navy px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-navy-2 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Send size={15} />
-              Save entry
+              {saving ? "Saving..." : "Save entry"}
             </button>
           </div>
         </Card>
       )}
 
-      <div className="space-y-3">
-        {entries.map((entry) => {
-          const entryMood = moodFor(entry.mood);
-          return (
-            <Card key={entry.id} className="p-5">
-              <div className="flex items-start gap-3.5">
-                <span
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${entryMood.circle}`}
-                >
-                  <Icon
-                    name={entryMood.icon}
-                    size={18}
-                    className={entryMood.text}
-                  />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-[15px] font-bold text-ink">
-                      {entry.title}
-                    </h3>
-                    <span className="rounded-full bg-cream px-2 py-0.5 text-[11px] font-semibold text-muted">
-                      {entryMood.label}
-                    </span>
+      {loading ? (
+        <div className="py-12 text-center text-sm text-muted">Loading your journals...</div>
+      ) : entries.length === 0 ? (
+        <div className="py-12 text-center text-sm text-muted">
+          No entries yet. Start writing to capture your thoughts.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {entries.map((entry) => {
+            const entryMood = moodFor(entry.mood);
+            return (
+              <Card key={entry._id} className="p-5">
+                <div className="flex items-start gap-3.5">
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${entryMood.circle}`}
+                  >
+                    <Icon
+                      name={entryMood.icon}
+                      size={18}
+                      className={entryMood.text}
+                    />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-[15px] font-bold text-ink">
+                        {entry.title}
+                      </h3>
+                      <span className="rounded-full bg-cream px-2 py-0.5 text-[11px] font-semibold text-muted">
+                        {entryMood.label}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-muted">
+                      {formatRelativeDate(entry.createdAt)}
+                    </p>
+                    <p className="mt-2 text-sm leading-relaxed text-muted">
+                      {entry.text}
+                    </p>
                   </div>
-                  <p className="mt-0.5 text-xs text-muted">{entry.date}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-muted">
-                    {entry.text}
-                  </p>
+                  <button
+                    onClick={() => deleteEntry(entry._id)}
+                    className="shrink-0 rounded-lg p-1.5 text-muted/50 transition-colors hover:bg-blossom-soft hover:text-blossom-deep"
+                    title="Delete entry"
+                  >
+                    <Trash2 size={15} />
+                  </button>
                 </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
