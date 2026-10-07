@@ -12,6 +12,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
+// Render terminates TLS at its proxy; trust X-Forwarded-* so req.protocol/hostname are correct
+app.set("trust proxy", 1);
+
 // Middleware
 app.use(cors({ origin: CLIENT_URL, credentials: true }));
 app.use(express.json());
