@@ -95,17 +95,17 @@ export default function Chatbot() {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setExpanded((prev) => !prev)}
-                className="rounded-lg p-1.5 text-mint transition-colors hover:bg-white/20 hover:text-white"
+                className="rounded-lg p-1.5 text-white transition-colors hover:bg-white/25"
                 aria-label={expanded ? "Restore chat window" : "Enlarge chat window"}
               >
-                {expanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                {expanded ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="rounded-lg p-1.5 text-mint transition-colors hover:bg-white/20 hover:text-white"
+                className="rounded-lg p-1.5 text-white transition-colors hover:bg-white/25"
                 aria-label="Close chat"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
           </div>
