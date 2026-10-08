@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Sparkles, X } from "lucide-react";
+import { Send, Sparkles, TriangleAlert, X } from "lucide-react";
 
 const API_KEY_NOTICE = "An api key is required to initiate chatbot";
 
@@ -29,7 +29,7 @@ export default function Chatbot() {
     setMessages((prev) => [
       ...prev,
       { id: Date.now(), role: "user", text },
-      { id: Date.now() + 1, role: "bot", text: API_KEY_NOTICE },
+      { id: Date.now() + 1, role: "bot", type: "warning", text: API_KEY_NOTICE },
     ]);
     setInput("");
   };
@@ -58,22 +58,32 @@ export default function Chatbot() {
           </div>
 
           <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto bg-cream px-4 py-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-              >
+            {messages.map((message) =>
+              message.type === "warning" ? (
                 <div
-                  className={`max-w-[80%] whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
-                    message.role === "user"
-                      ? "rounded-br-md bg-navy text-white"
-                      : "rounded-bl-md border border-line bg-white text-ink shadow-sm"
-                  }`}
+                  key={message.id}
+                  className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-3 py-2.5 text-sm font-semibold leading-relaxed text-red-600"
                 >
-                  {message.text}
+                  <TriangleAlert size={17} className="mt-0.5 shrink-0" />
+                  <span>{message.text}</span>
                 </div>
-              </div>
-            ))}
+              ) : (
+                <div
+                  key={message.id}
+                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[80%] whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                      message.role === "user"
+                        ? "rounded-br-md bg-navy text-white"
+                        : "rounded-bl-md border border-line bg-white text-ink shadow-sm"
+                    }`}
+                  >
+                    {message.text}
+                  </div>
+                </div>
+              )
+            )}
           </div>
 
           <div className="border-t border-line bg-white px-3 py-3">
