@@ -25,6 +25,7 @@ passport.use(
           user = await User.findOne({ email });
           if (user) {
             user.googleId = profile.id;
+            user.isVerified = true;
             if (!user.avatar && avatar) user.avatar = avatar;
             await user.save();
           }
@@ -36,6 +37,7 @@ passport.use(
             name: profile.displayName,
             email,
             avatar,
+            isVerified: true,
           });
         }
 

@@ -630,6 +630,7 @@ function FooterColumn({ title, links }) {
 function AuthModal({ mode, setMode, initialError = "", onClose, onSuccess }) {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState(initialError);
+  const [notice, setNotice] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { login, register } = useAuth();
 
@@ -645,16 +646,27 @@ function AuthModal({ mode, setMode, initialError = "", onClose, onSuccess }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
+    setNotice("");
     setSubmitting(true);
     try {
       if (mode === "signin") {
         await login(form.email, form.password);
+        onSuccess();
       } else {
-        await register(form.name, form.email, form.password);
+        const data = await register(form.name, form.email, form.password);
+        if (data.needsVerification) {
+          setNotice(data.message);
+          setForm({ name: "", email: "", password: "" });
+        } else {
+          onSuccess();
+        }
       }
-      onSuccess();
     } catch (err) {
-      setError(err.message);
+      if (err.message === "Please verify your email before signing in.") {
+        setNotice(err.message);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -742,6 +754,7 @@ function AuthModal({ mode, setMode, initialError = "", onClose, onSuccess }) {
             </p>
           )}
 
+          {notice && <p className="auth-notice">{notice}</p>}
           {error && <p className="auth-error">{error}</p>}
 
           <button type="submit" className="auth-submit" disabled={submitting}>

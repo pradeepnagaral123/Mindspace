@@ -17,6 +17,7 @@ import Helplines from "./pages/Helplines";
 import Profile from "./pages/Profile";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import AuthCallback from "./pages/AuthCallback";
+import VerifyEmail from "./pages/VerifyEmail";
 import AppShell from "./components/AppShell";
 
 function ProtectedRoute() {
@@ -38,6 +39,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/verify" element={<VerifyEmail />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppShell />}>

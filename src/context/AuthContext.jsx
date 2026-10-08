@@ -57,6 +57,7 @@ export function AuthProvider({ children }) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message);
+    if (data.needsVerification) return data;
     localStorage.setItem("token", data.token);
     setToken(data.token);
     setUser(data.user);
