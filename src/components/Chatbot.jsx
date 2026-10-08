@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Sparkles, TriangleAlert, X } from "lucide-react";
+import { Maximize2, Minimize2, Send, Sparkles, TriangleAlert, X } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [messages, setMessages] = useState([
@@ -74,7 +75,13 @@ export default function Chatbot() {
   return (
     <>
       {open && (
-        <div className="fixed bottom-24 right-4 z-40 flex h-[460px] w-[calc(100vw-2rem)] max-w-[370px] flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-[0_16px_48px_rgba(7,21,34,0.22)] sm:right-6">
+        <div
+          className={`fixed bottom-24 right-4 z-40 flex flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-[0_16px_48px_rgba(7,21,34,0.22)] transition-all duration-300 sm:right-6 ${
+            expanded
+              ? "h-[70vh] w-[calc(100vw-2rem)] max-w-[620px]"
+              : "h-[460px] w-[calc(100vw-2rem)] max-w-[370px]"
+          }`}
+        >
           <div className="flex items-center justify-between bg-navy px-4 py-3 text-white">
             <div className="flex items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-mint text-navy">
@@ -85,13 +92,22 @@ export default function Chatbot() {
                 <p className="text-[11px] leading-tight text-mint">Online · mental health info</p>
               </div>
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-              aria-label="Close chat"
-            >
-              <X size={18} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setExpanded((prev) => !prev)}
+                className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label={expanded ? "Restore chat window" : "Enlarge chat window"}
+              >
+                {expanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+              </button>
+              <button
+                onClick={() => setOpen(false)}
+                className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Close chat"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
 
           <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto bg-cream px-4 py-4">
