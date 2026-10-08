@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.js";
 import journalRoutes from "./routes/journal.js";
 import moodRoutes from "./routes/mood.js";
 import connectionRoutes from "./routes/connection.js";
+import chatRoutes from "./routes/chat.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/journals", journalRoutes);
 app.use("/api/moods", moodRoutes);
 app.use("/api/connections", connectionRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "MindSpace API is running" });

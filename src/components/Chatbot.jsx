@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, Sparkles, TriangleAlert, X } from "lucide-react";
 
-const API_KEY_NOTICE = "An api key is required to initiate chatbot";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
+  const [typing, setTyping] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -20,18 +21,54 @@ export default function Chatbot() {
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
-  }, [messages, open]);
+  }, [messages, typing, open]);
 
-  const send = () => {
+  const send = async () => {
     const text = input.trim();
-    if (!text) return;
+    if (!text || typing) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now(), role: "user", text },
-      { id: Date.now() + 1, role: "bot", type: "warning", text: API_KEY_NOTICE },
-    ]);
+    const history = [...messages, { id: Date.now(), role: "user", text }];
+    setMessages(history);
     setInput("");
+    setTyping(true);
+
+    try {
+      const res = await fetch(`${API_URL}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: history
+            .filter((m) => !m.type)
+            .map((m) => ({
+              role: m.role === "bot" ? "assistant" : "user",
+              content: m.text,
+            })),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.reply) {
+        throw new Error(data.message || "Something went wrong. Please try again.");
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now() + 1, role: "bot", text: data.reply },
+      ]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          role: "bot",
+          type: "warning",
+          text: error.message || "Could not reach the chatbot service. Please try again.",
+        },
+      ]);
+    } finally {
+      setTyping(false);
+    }
   };
 
   return (
@@ -84,6 +121,16 @@ export default function Chatbot() {
                 </div>
               )
             )}
+
+            {typing && (
+              <div className="flex justify-start">
+                <div className="flex gap-1 rounded-2xl rounded-bl-md border border-line bg-white px-4 py-3 shadow-sm">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted [animation-delay:-0.2s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted [animation-delay:-0.1s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted" />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="border-t border-line bg-white px-3 py-3">
@@ -92,12 +139,12 @@ export default function Chatbot() {
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={(event) => event.key === "Enter" && send()}
-                placeholder="Ask about your wellbeing..."
+                placeholder={typing ? "Thinking..." : "Ask about your wellbeing..."}
                 className="min-w-0 flex-1 rounded-xl border border-line bg-cream px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-muted/60 focus:border-mint-deep"
               />
               <button
                 onClick={send}
-                disabled={!input.trim()}
+                disabled={!input.trim() || typing}
                 aria-label="Send message"
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mint text-navy transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
               >
