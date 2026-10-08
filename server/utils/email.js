@@ -1,14 +1,24 @@
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import nodemailer from "nodemailer";
 
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
+
 export const sendVerificationEmail = async (email, token) => {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    throw new Error("GMAIL_USER / GMAIL_APP_PASSWORD not set in environment");
+  }
+
   const verifyUrl = `${CLIENT_URL}/verify?token=${encodeURIComponent(token)}`;
 
-  const { error } = await resend.emails.send({
-    from: "MindSpace <onboarding@resend.dev>",
+  await transporter.sendMail({
+    from: `"MindSpace" <${process.env.GMAIL_USER}>`,
     to: email,
     subject: "Verify your email for MindSpace",
     html: `
@@ -29,8 +39,4 @@ export const sendVerificationEmail = async (email, token) => {
       </div>
     `,
   });
-
-  if (error) {
-    throw new Error(error.message || "Failed to send verification email");
-  }
 };
