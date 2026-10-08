@@ -1,17 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Send, Sparkles, X } from "lucide-react";
 
-const CANNED_REPLIES = [
-  "I'm here to share general mental health information — tips on stress, sleep, anxiety, and self-care. What would you like to know?",
-  "That's a great question. Practicing small daily habits — like a short walk, deep breathing, or journaling — can make a real difference. Want more detail on any of these?",
-  "You're not alone in feeling this way. Talking to someone you trust, or a peer in your community, often helps. Would you like me to point you to the Helplines page?",
-  "Remember, I'm a supportive assistant, not a therapist. For professional help, please reach out to a counsellor or a crisis line if things feel heavy.",
-];
+const API_KEY_NOTICE = "An api key is required to initiate chatbot";
 
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const [typing, setTyping] = useState(false);
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -21,29 +15,23 @@ export default function Chatbot() {
   ]);
 
   const listRef = useRef(null);
-  const replyIndex = useRef(0);
 
   useEffect(() => {
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
-  }, [messages, typing, open]);
+  }, [messages, open]);
 
   const send = () => {
     const text = input.trim();
-    if (!text || typing) return;
+    if (!text) return;
 
-    setMessages((prev) => [...prev, { id: Date.now(), role: "user", text }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: Date.now(), role: "user", text },
+      { id: Date.now() + 1, role: "bot", text: API_KEY_NOTICE },
+    ]);
     setInput("");
-    setTyping(true);
-
-    const reply = CANNED_REPLIES[replyIndex.current % CANNED_REPLIES.length];
-    replyIndex.current += 1;
-
-    setTimeout(() => {
-      setTyping(false);
-      setMessages((prev) => [...prev, { id: Date.now() + 1, role: "bot", text: reply }]);
-    }, 900);
   };
 
   return (
@@ -86,16 +74,6 @@ export default function Chatbot() {
                 </div>
               </div>
             ))}
-
-            {typing && (
-              <div className="flex justify-start">
-                <div className="flex gap-1 rounded-2xl rounded-bl-md border border-line bg-white px-4 py-3 shadow-sm">
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted [animation-delay:-0.2s]" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted [animation-delay:-0.1s]" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted" />
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="border-t border-line bg-white px-3 py-3">
@@ -109,7 +87,7 @@ export default function Chatbot() {
               />
               <button
                 onClick={send}
-                disabled={!input.trim() || typing}
+                disabled={!input.trim()}
                 aria-label="Send message"
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mint text-navy transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
               >
