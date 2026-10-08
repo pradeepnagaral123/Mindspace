@@ -109,7 +109,7 @@ function Landing() {
               >
                 Find Your Community
               </button>
-              <button className="secondary-btn">How It Works</button>
+              <a href="#how" className="secondary-btn">How It Works</a>
             </div>
 
             <div className="member-row">

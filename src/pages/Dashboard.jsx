@@ -6,6 +6,7 @@ import DailyCheckIn from "../components/DailyCheckIn";
 import CommunityFeed from "../components/CommunityFeed";
 import UpcomingEvents from "../components/UpcomingEvents";
 import EmergencySupportCard from "../components/EmergencySupportCard";
+import Chatbot from "../components/Chatbot";
 
 export default function Dashboard() {
   return (
@@ -28,6 +29,8 @@ export default function Dashboard() {
           <EmergencySupportCard />
         </div>
       </div>
+
+      <Chatbot />
     </div>
   );
 }

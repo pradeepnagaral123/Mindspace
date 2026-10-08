@@ -1,0 +1,137 @@
+import { useEffect, useRef, useState } from "react";
+import { Send, Sparkles, X } from "lucide-react";
+
+const CANNED_REPLIES = [
+  "I'm here to share general mental health information — tips on stress, sleep, anxiety, and self-care. What would you like to know?",
+  "That's a great question. Practicing small daily habits — like a short walk, deep breathing, or journaling — can make a real difference. Want more detail on any of these?",
+  "You're not alone in feeling this way. Talking to someone you trust, or a peer in your community, often helps. Would you like me to point you to the Helplines page?",
+  "Remember, I'm a supportive assistant, not a therapist. For professional help, please reach out to a counsellor or a crisis line if things feel heavy.",
+];
+
+export default function Chatbot() {
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [typing, setTyping] = useState(false);
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      role: "bot",
+      text: "Hi! I'm the MindSpace assistant. Ask me anything about mental health — stress, sleep, anxiety, or self-care.",
+    },
+  ]);
+
+  const listRef = useRef(null);
+  const replyIndex = useRef(0);
+
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [messages, typing, open]);
+
+  const send = () => {
+    const text = input.trim();
+    if (!text || typing) return;
+
+    setMessages((prev) => [...prev, { id: Date.now(), role: "user", text }]);
+    setInput("");
+    setTyping(true);
+
+    const reply = CANNED_REPLIES[replyIndex.current % CANNED_REPLIES.length];
+    replyIndex.current += 1;
+
+    setTimeout(() => {
+      setTyping(false);
+      setMessages((prev) => [...prev, { id: Date.now() + 1, role: "bot", text: reply }]);
+    }, 900);
+  };
+
+  return (
+    <>
+      {open && (
+        <div className="fixed bottom-24 right-4 z-40 flex h-[460px] w-[calc(100vw-2rem)] max-w-[370px] flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-[0_16px_48px_rgba(7,21,34,0.22)] sm:right-6">
+          <div className="flex items-center justify-between bg-navy px-4 py-3 text-white">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-mint text-navy">
+                <Sparkles size={16} />
+              </span>
+              <div>
+                <p className="text-sm font-bold leading-tight">MindSpace Assistant</p>
+                <p className="text-[11px] leading-tight text-mint">Online · mental health info</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="rounded-lg p-1.5 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              aria-label="Close chat"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto bg-cream px-4 py-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`max-w-[80%] whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                    message.role === "user"
+                      ? "rounded-br-md bg-navy text-white"
+                      : "rounded-bl-md border border-line bg-white text-ink shadow-sm"
+                  }`}
+                >
+                  {message.text}
+                </div>
+              </div>
+            ))}
+
+            {typing && (
+              <div className="flex justify-start">
+                <div className="flex gap-1 rounded-2xl rounded-bl-md border border-line bg-white px-4 py-3 shadow-sm">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted [animation-delay:-0.2s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted [animation-delay:-0.1s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-line bg-white px-3 py-3">
+            <div className="flex items-center gap-2">
+              <input
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={(event) => event.key === "Enter" && send()}
+                placeholder="Ask about your wellbeing..."
+                className="min-w-0 flex-1 rounded-xl border border-line bg-cream px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-muted/60 focus:border-mint-deep"
+              />
+              <button
+                onClick={send}
+                disabled={!input.trim() || typing}
+                aria-label="Send message"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mint text-navy transition-all hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
+              >
+                <Send size={17} />
+              </button>
+            </div>
+            <p className="mt-2 text-center text-[10px] leading-tight text-muted">
+              General information only — not a substitute for professional help.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        aria-label={open ? "Close chatbot" : "Open chatbot"}
+        className={`fixed bottom-5 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full text-navy shadow-[0_8px_24px_rgba(7,21,34,0.28)] transition-all hover:-translate-y-1 sm:right-6 ${
+          open ? "bg-navy text-mint" : "bg-mint"
+        }`}
+      >
+        {open ? <X size={22} /> : <Sparkles size={22} />}
+      </button>
+    </>
+  );
+}
