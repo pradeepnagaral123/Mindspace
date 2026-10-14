@@ -177,11 +177,11 @@ export default function Chatbot() {
       <button
         onClick={() => setOpen((prev) => !prev)}
         aria-label={open ? "Close chatbot" : "Open chatbot"}
-        className={`fixed bottom-5 right-4 z-50 flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-bold shadow-[0_8px_24px_rgba(7,21,34,0.28)] transition-all hover:-translate-y-1 sm:right-6 ${
+        className={`fixed bottom-5 right-4 z-50 flex items-center gap-2.5 rounded-xl px-5 py-3.5 text-base font-bold shadow-[0_8px_24px_rgba(7,21,34,0.28)] transition-all hover:-translate-y-1 sm:right-6 ${
           open ? "bg-navy text-mint" : "bg-mint text-navy"
         }`}
       >
-        {open ? <X size={18} /> : <Sparkles size={18} />}
+        {open ? <X size={21} /> : <Sparkles size={21} />}
         <span>{open ? "Close" : "Mindspace bot"}</span>
       </button>
     </>
