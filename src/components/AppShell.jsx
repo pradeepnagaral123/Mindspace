@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import Chatbot from "./Chatbot";
 import { SearchProvider } from "../context/SearchContext";
 
 export default function AppShell() {
@@ -25,6 +26,8 @@ export default function AppShell() {
             <Outlet />
           </main>
         </div>
+
+        <Chatbot />
       </div>
     </SearchProvider>
   );
