@@ -4,12 +4,14 @@ import { io } from "socket.io-client";
 import {
   Check,
   CheckCheck,
+  Copy,
   MessageCircle,
   MoreVertical,
   Paperclip,
   Search,
   Send,
   Smile,
+  Trash2,
   UserPlus,
 } from "lucide-react";
 import Card from "../components/Card";
@@ -59,6 +61,8 @@ export default function Messages() {
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [search, setSearch] = useState("");
   const [socketLive, setSocketLive] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const myId = useMemo(() => {
     if (user?._id) return String(user._id);
@@ -143,6 +147,16 @@ export default function Messages() {
       if (isActive && !fromMe) {
         socket.emit("messages:read", { connectionId: msg.connection });
       }
+    });
+
+    socket.on("message:deleted", ({ connectionId, messageId }) => {
+      setMessages((current) => ({
+        ...current,
+        [connectionId]: (current[connectionId] || []).filter(
+          (m) => String(m._id) !== String(messageId),
+        ),
+      }));
+      fetchThreads();
     });
 
     socket.on("typing", ({ connectionId, typing }) => {
@@ -239,6 +253,35 @@ export default function Messages() {
       if (response?.error) {
         console.error("Message not sent:", response.error);
       }
+    });
+  };
+
+  const copyMessage = async (message) => {
+    try {
+      await navigator.clipboard.writeText(message.text);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = message.text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+    setCopiedId(message._id);
+    setTimeout(
+      () => setCopiedId((current) => (current === message._id ? null : current)),
+      1400,
+    );
+  };
+
+  const confirmDelete = (messageId) => {
+    setPendingDelete(null);
+    const socket = socketRef.current;
+    if (!socket || !messageId) return;
+    socket.emit("message:delete", { messageId }, (response) => {
+      if (response?.error) console.error("Delete failed:", response.error);
     });
   };
 
@@ -441,11 +484,60 @@ export default function Messages() {
                 )}
                 {activeMessages.map((message) => {
                   const mine = myId && inStringEqual(message.sender, myId);
+                  const confirming = pendingDelete === message._id;
                   return (
                     <div
                       key={message._id}
-                      className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                      className={`group flex items-center gap-1.5 ${
+                        mine ? "justify-end" : "justify-start"
+                      }`}
                     >
+                      {mine && (
+                        <div className="flex shrink-0 items-center gap-1">
+                          {confirming ? (
+                            <>
+                              <button
+                                onClick={() => confirmDelete(message._id)}
+                                className="rounded-lg bg-blossom/15 px-2 py-1 text-[11px] font-semibold text-blossom hover:bg-blossom/25"
+                              >
+                                Delete
+                              </button>
+                              <button
+                                onClick={() => setPendingDelete(null)}
+                                className="rounded-lg border border-line bg-white px-2 py-1 text-[11px] font-semibold text-muted hover:bg-cream"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                              <button
+                                onClick={() => copyMessage(message)}
+                                title="Copy message"
+                                aria-label="Copy message"
+                                className="rounded-lg p-1.5 text-muted hover:bg-cream hover:text-ink"
+                              >
+                                {copiedId === message._id ? (
+                                  <Check size={14} className="text-mint-deep" />
+                                ) : (
+                                  <Copy size={14} />
+                                )}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setCopiedId(null);
+                                  setPendingDelete(message._id);
+                                }}
+                                title="Delete message"
+                                aria-label="Delete message"
+                                className="rounded-lg p-1.5 text-muted hover:bg-blossom/15 hover:text-blossom"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <div
                         className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                           mine

@@ -154,6 +154,42 @@ export function initSocket(httpServer, corsOrigin) {
       }
     });
 
+    socket.on("message:delete", async ({ messageId }, ack) => {
+      try {
+        if (!messageId) return ack?.({ error: "Invalid message" });
+        const message = await Message.findById(messageId).populate("connection");
+        if (!message || !message.connection) {
+          return ack?.({ error: "Message not found" });
+        }
+        const connection = message.connection;
+        const isMember =
+          connection.user.toString() === userId ||
+          connection.peer.toString() === userId;
+        if (!isMember) return ack?.({ error: "Not allowed" });
+        if (message.sender.toString() !== userId) {
+          return ack?.({ error: "You can only delete your own messages" });
+        }
+
+        const peerId =
+          connection.user.toString() === userId
+            ? connection.peer.toString()
+            : connection.user.toString();
+
+        await Message.deleteOne({ _id: message._id });
+
+        io.to(`user:${userId}`)
+          .to(`user:${peerId}`)
+          .emit("message:deleted", {
+            connectionId: connection._id.toString(),
+            messageId: message._id.toString(),
+          });
+        ack?.({ ok: true });
+      } catch (error) {
+        console.error("message:delete error:", error.message);
+        ack?.({ error: "Failed to delete" });
+      }
+    });
+
     socket.on("disconnect", async () => {
       const sockets = onlineUsers.get(userId);
       if (sockets) {
