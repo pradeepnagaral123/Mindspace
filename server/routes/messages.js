@@ -22,13 +22,14 @@ router.get("/threads", auth, async (req, res) => {
     const [recent, unreadGroups] = await Promise.all([
       Message.find({ connection: { $in: connIds } })
         .sort({ createdAt: -1 })
-        .select("connection text createdAt readAt sender"),
+        .select("connection text createdAt readAt sender deleted"),
       Message.aggregate([
         {
           $match: {
             connection: { $in: connIds },
             sender: { $ne: uid },
             readAt: null,
+            deleted: { $ne: true },
           },
         },
         { $group: { _id: "$connection", count: { $sum: 1 } } },
@@ -59,7 +60,11 @@ router.get("/threads", auth, async (req, res) => {
           avatar: peer.avatar || null,
           online: isOnline(peer._id),
         },
-        lastMessage: last ? last.text : "",
+        lastMessage: last
+          ? last.deleted
+            ? "This message was deleted"
+            : last.text
+          : "",
         lastMessageAt: last ? last.createdAt : c.createdAt,
         unread: unreadByConnection[key] || 0,
       };

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import {
+  Ban,
   Check,
   CheckCheck,
   Copy,
@@ -152,8 +153,10 @@ export default function Messages() {
     socket.on("message:deleted", ({ connectionId, messageId }) => {
       setMessages((current) => ({
         ...current,
-        [connectionId]: (current[connectionId] || []).filter(
-          (m) => String(m._id) !== String(messageId),
+        [connectionId]: (current[connectionId] || []).map((m) =>
+          String(m._id) === String(messageId)
+            ? { ...m, deleted: true, text: "" }
+            : m,
         ),
       }));
       fetchThreads();
@@ -482,83 +485,115 @@ export default function Messages() {
                     kind.
                   </p>
                 )}
-                {activeMessages.map((message) => {
+                {activeMessages.map((message, index) => {
                   const mine = myId && inStringEqual(message.sender, myId);
                   const confirming = pendingDelete === message._id;
+                  const isDeleted = Boolean(message.deleted);
+                  const prev = activeMessages[index - 1];
+                  const senderKey = (m) =>
+                    m && typeof m.sender === "object"
+                      ? m.sender?._id
+                      : m?.sender;
+                  const showLabel =
+                    !prev ||
+                    String(senderKey(prev)) !== String(senderKey(message));
                   return (
                     <div
                       key={message._id}
-                      className={`group flex items-center gap-1.5 ${
-                        mine ? "justify-end" : "justify-start"
+                      className={`flex flex-col ${
+                        mine ? "items-end" : "items-start"
                       }`}
                     >
-                      {mine && (
-                        <div className="flex shrink-0 items-center gap-1">
-                          {confirming ? (
-                            <>
-                              <button
-                                onClick={() => confirmDelete(message._id)}
-                                className="rounded-lg bg-blossom/15 px-2 py-1 text-[11px] font-semibold text-blossom hover:bg-blossom/25"
-                              >
-                                Delete
-                              </button>
-                              <button
-                                onClick={() => setPendingDelete(null)}
-                                className="rounded-lg border border-line bg-white px-2 py-1 text-[11px] font-semibold text-muted hover:bg-cream"
-                              >
-                                Cancel
-                              </button>
-                            </>
-                          ) : (
-                            <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                              <button
-                                onClick={() => copyMessage(message)}
-                                title="Copy message"
-                                aria-label="Copy message"
-                                className="rounded-lg p-1.5 text-muted hover:bg-cream hover:text-ink"
-                              >
-                                {copiedId === message._id ? (
-                                  <Check size={14} className="text-mint-deep" />
-                                ) : (
-                                  <Copy size={14} />
-                                )}
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setCopiedId(null);
-                                  setPendingDelete(message._id);
-                                }}
-                                title="Delete message"
-                                aria-label="Delete message"
-                                className="rounded-lg p-1.5 text-muted hover:bg-blossom/15 hover:text-blossom"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                      {showLabel && (
+                        <span className="mb-1 px-1 text-[11px] font-semibold text-muted">
+                          {mine ? "You" : activeThread.peer.name}
+                        </span>
                       )}
-                      <div
-                        className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                          mine
-                            ? "rounded-br-md bg-navy text-white"
-                            : "rounded-bl-md bg-mint-soft text-ink"
-                        }`}
-                      >
-                        {message.text}
-                        <span
-                          className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
-                            mine ? "text-white/50" : "text-muted"
+                      <div className="group flex items-center gap-1.5">
+                        {mine && !isDeleted && (
+                          <div className="flex shrink-0 items-center gap-1">
+                            {confirming ? (
+                              <>
+                                <button
+                                  onClick={() => confirmDelete(message._id)}
+                                  className="rounded-lg bg-blossom/15 px-2 py-1 text-[11px] font-semibold text-blossom hover:bg-blossom/25"
+                                >
+                                  Delete
+                                </button>
+                                <button
+                                  onClick={() => setPendingDelete(null)}
+                                  className="rounded-lg border border-line bg-white px-2 py-1 text-[11px] font-semibold text-muted hover:bg-cream"
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            ) : (
+                              <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                                <button
+                                  onClick={() => copyMessage(message)}
+                                  title="Copy message"
+                                  aria-label="Copy message"
+                                  className="rounded-lg p-1.5 text-muted hover:bg-cream hover:text-ink"
+                                >
+                                  {copiedId === message._id ? (
+                                    <Check size={14} className="text-mint-deep" />
+                                  ) : (
+                                    <Copy size={14} />
+                                  )}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setCopiedId(null);
+                                    setPendingDelete(message._id);
+                                  }}
+                                  title="Delete message"
+                                  aria-label="Delete message"
+                                  className="rounded-lg p-1.5 text-muted hover:bg-blossom/15 hover:text-blossom"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <div
+                          className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                            isDeleted
+                              ? `border border-dashed border-line bg-cream/70 text-muted ${
+                                  mine ? "rounded-br-md" : "rounded-bl-md"
+                                }`
+                              : mine
+                                ? "rounded-br-md bg-navy text-white"
+                                : "rounded-bl-md bg-mint-soft text-ink"
                           }`}
                         >
-                          {clockTime(message.createdAt)}
-                          {mine &&
-                            (message.readAt ? (
-                              <CheckCheck size={13} className="text-sky-300" />
-                            ) : (
-                              <Check size={13} className="text-white/50" />
-                            ))}
-                        </span>
+                          {isDeleted ? (
+                            <span className="flex items-center gap-1.5 text-[13px] italic">
+                              <Ban size={13} />
+                              This message was deleted
+                            </span>
+                          ) : (
+                            message.text
+                          )}
+                          {!isDeleted && (
+                            <span
+                              className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
+                                mine ? "text-white/50" : "text-muted"
+                              }`}
+                            >
+                              {clockTime(message.createdAt)}
+                              {mine &&
+                                (message.readAt ? (
+                                  <CheckCheck
+                                    size={13}
+                                    className="text-sky-300"
+                                  />
+                                ) : (
+                                  <Check size={13} className="text-white/50" />
+                                ))}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
