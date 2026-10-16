@@ -60,6 +60,18 @@ export default function Messages() {
   const [search, setSearch] = useState("");
   const [socketLive, setSocketLive] = useState(false);
 
+  const myId = useMemo(() => {
+    if (user?._id) return String(user._id);
+    if (!token) return null;
+    try {
+      const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      const payload = JSON.parse(atob(base64));
+      return payload?.id ? String(payload.id) : null;
+    } catch {
+      return null;
+    }
+  }, [user, token]);
+
   const socketRef = useRef(null);
   const activeIdRef = useRef(null);
   const listRef = useRef(null);
@@ -100,18 +112,10 @@ export default function Messages() {
     socket.on("disconnect", () => setSocketLive(false));
 
     socket.on("message:new", (msg) => {
-      const fromMe = user && String(msg.sender._id) === String(user._id);
+      const fromMe = myId && String(msg.sender._id) === myId;
       setMessages((current) => {
         const list = current[msg.connection] || [];
-        if (list.some((m) => m._id === msg._id)) return current;
-        if (fromMe) {
-          const idx = list.findIndex((m) => m.pending && m.text === msg.text);
-          if (idx !== -1) {
-            const next = [...list];
-            next[idx] = msg;
-            return { ...current, [msg.connection]: next };
-          }
-        }
+        if (list.some((m) => String(m._id) === String(msg._id))) return current;
         return { ...current, [msg.connection]: [...list, msg] };
       });
 
@@ -149,7 +153,7 @@ export default function Messages() {
       setMessages((current) => ({
         ...current,
         [connectionId]: (current[connectionId] || []).map((m) =>
-          user && inStringEqual(m.sender, user._id)
+          myId && inStringEqual(m.sender, myId)
             ? { ...m, readAt: m.readAt || new Date().toISOString() }
             : m,
         ),
@@ -172,14 +176,46 @@ export default function Messages() {
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [token, user, fetchThreads]);
+  }, [token, myId, fetchThreads]);
 
   useEffect(() => {
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, activeId, peerTyping]);
 
-  const openThread = async (connectionId) => {
+  useEffect(() => {
+    if (!activeId || !token) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${API_URL}/messages/${activeId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (Array.isArray(data?.messages) && !cancelled) {
+          setMessages((current) => {
+            const existing = current[activeId] || [];
+            const incoming = data.messages;
+            const seen = new Set(incoming.map((m) => String(m._id)));
+            const extras = existing.filter((m) => !seen.has(String(m._id)));
+            const merged = [...incoming, ...extras].sort(
+              (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+            );
+            return { ...current, [activeId]: merged };
+          });
+        }
+      } catch {
+        // leave empty; socket messages will still arrive
+      }
+    })();
+    socketRef.current?.emit("messages:read", { connectionId: activeId });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeId, token]);
+
+  const openThread = (connectionId) => {
     setActiveId(connectionId);
     setThreads((current) =>
       current.map((t) =>
@@ -187,25 +223,6 @@ export default function Messages() {
       ),
     );
     setPeerTyping((current) => ({ ...current, [connectionId]: false }));
-    socketRef.current?.emit("messages:read", { connectionId });
-    if (!messages[connectionId] && token) {
-      try {
-        const res = await fetch(`${API_URL}/messages/${connectionId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data?.messages)) {
-            setMessages((current) => ({
-              ...current,
-              [connectionId]: data.messages,
-            }));
-          }
-        }
-      } catch {
-        // leave empty; socket messages will still arrive
-      }
-    }
   };
 
   const sendMessage = () => {
@@ -214,55 +231,13 @@ export default function Messages() {
     const connId = activeIdRef.current;
     if (!text || !socket || !connId) return;
 
-    const tempId = `temp-${Date.now()}`;
-    const optimistic = {
-      _id: tempId,
-      connection: connId,
-      sender: { _id: user?._id, name: user?.name },
-      text,
-      readAt: null,
-      createdAt: new Date().toISOString(),
-      pending: true,
-    };
-
-    setMessages((current) => ({
-      ...current,
-      [connId]: [...(current[connId] || []), optimistic],
-    }));
-    setThreads((current) =>
-      sortThreads(
-        current.map((t) =>
-          t.connectionId === connId
-            ? {
-                ...t,
-                lastMessage: text,
-                lastMessageAt: optimistic.createdAt,
-              }
-            : t,
-        ),
-      ),
-    );
     setDraft("");
     socket.emit("typing", { connectionId: connId, typing: false });
     lastTypingRef.current = 0;
 
     socket.emit("message:send", { connectionId: connId, text }, (response) => {
       if (response?.error) {
-        setMessages((current) => ({
-          ...current,
-          [connId]: (current[connId] || []).filter((m) => m._id !== tempId),
-        }));
-        return;
-      }
-      if (response?.message) {
-        setMessages((current) => {
-          const list = current[connId] || [];
-          const idx = list.findIndex((m) => m._id === tempId);
-          if (idx === -1) return current;
-          const next = [...list];
-          next[idx] = response.message;
-          return { ...current, [connId]: next };
-        });
+        console.error("Message not sent:", response.error);
       }
     });
   };
@@ -465,7 +440,7 @@ export default function Messages() {
                   </p>
                 )}
                 {activeMessages.map((message) => {
-                  const mine = user && inStringEqual(message.sender, user._id);
+                  const mine = myId && inStringEqual(message.sender, myId);
                   return (
                     <div
                       key={message._id}
@@ -475,8 +450,8 @@ export default function Messages() {
                         className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                           mine
                             ? "rounded-br-md bg-navy text-white"
-                            : "rounded-bl-md border border-line bg-white text-ink"
-                        } ${message.pending ? "opacity-70" : ""}`}
+                            : "rounded-bl-md bg-mint-soft text-ink"
+                        }`}
                       >
                         {message.text}
                         <span
@@ -498,7 +473,7 @@ export default function Messages() {
                 })}
                 {peerTyping[activeId] && (
                   <div className="flex justify-start">
-                    <div className="rounded-2xl rounded-bl-md border border-line bg-white px-4 py-2.5 text-sm text-muted">
+                    <div className="rounded-2xl rounded-bl-md bg-mint-soft px-4 py-2.5 text-sm text-muted">
                       <span className="inline-flex gap-1">
                         <Dot /> <Dot delay="0.15s" /> <Dot delay="0.3s" />
                       </span>
