@@ -106,7 +106,16 @@ export default function FindAPeer() {
     })
       .then((r) => r.ok && r.json())
       .then((data) => {
-        if (Array.isArray(data?.users)) setMembers(data.users);
+        if (Array.isArray(data?.users)) {
+          setMembers(data.users);
+          setConnected((current) => {
+            const next = { ...current };
+            data.users.forEach((u) => {
+              if (u.connected) next[u._id] = true;
+            });
+            return next;
+          });
+        }
       })
       .catch(() => {});
   }, [token]);

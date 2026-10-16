@@ -9,25 +9,32 @@ const router = express.Router();
 
 router.get("/suggestions", auth, async (req, res) => {
   try {
-    const existing = await Connection.find({
+    const connections = await Connection.find({
       $or: [{ user: req.user._id }, { peer: req.user._id }],
     }).select("user peer");
 
-    const excludeIds = new Set([req.user._id.toString()]);
-    existing.forEach((c) => {
-      excludeIds.add(c.user.toString());
-      excludeIds.add(c.peer.toString());
+    const myId = req.user._id.toString();
+    const connectedIds = new Set();
+    connections.forEach((c) => {
+      const other =
+        c.user.toString() === myId ? c.peer.toString() : c.user.toString();
+      connectedIds.add(other);
     });
 
     const users = await User.find({
       isVerified: true,
-      _id: { $nin: [...excludeIds] },
+      _id: { $ne: req.user._id },
     })
       .select("name avatar createdAt")
       .sort({ createdAt: -1 })
-      .limit(12);
+      .limit(24);
 
-    res.json({ users });
+    res.json({
+      users: users.map((u) => ({
+        ...u.toObject(),
+        connected: connectedIds.has(u._id.toString()),
+      })),
+    });
   } catch (error) {
     console.error("Get suggestions error:", error.message);
     res.status(500).json({ message: "Server error" });
