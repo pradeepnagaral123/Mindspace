@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   MessageCircle,
   RefreshCw,
@@ -10,6 +10,11 @@ import {
 } from "lucide-react";
 import Card from "../components/Card";
 import Avatar from "../components/Avatar";
+import { useAuth } from "../context/AuthContext";
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+const memberGradients = ["mint", "lavender", "peach", "blossom", "sun"];
 
 const peers = [
   {
@@ -77,12 +82,56 @@ const intentOptions = [
 
 const topicChips = ["Anxiety", "Exams", "Sleep", "Burnout", "Grief", "Relationships", "Self-care"];
 
+function joinedLabel(date) {
+  return new Date(date).toLocaleDateString(undefined, {
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export default function FindAPeer() {
+  const { token } = useAuth();
   const [intent, setIntent] = useState("both");
   const [topics, setTopics] = useState(["Anxiety"]);
   const [connected, setConnected] = useState({});
   const [matched, setMatched] = useState(peers[0].id);
   const [currentPeer, setCurrentPeer] = useState(peers[0]);
+  const [members, setMembers] = useState([]);
+  const [connecting, setConnecting] = useState({});
+
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${API_URL}/connections/suggestions`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.ok && r.json())
+      .then((data) => {
+        if (Array.isArray(data?.users)) setMembers(data.users);
+      })
+      .catch(() => {});
+  }, [token]);
+
+  const connectToMember = async (member) => {
+    if (connected[member._id] || connecting[member._id]) return;
+    setConnecting((current) => ({ ...current, [member._id]: true }));
+    try {
+      const res = await fetch(`${API_URL}/connections`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ peerId: member._id }),
+      });
+      if (res.ok) {
+        setConnected((current) => ({ ...current, [member._id]: true }));
+      }
+    } catch {
+      // network failure — leave button unchanged
+    } finally {
+      setConnecting((current) => ({ ...current, [member._id]: false }));
+    }
+  };
 
   const toggleTopic = (topic) => {
     setTopics((current) =>
@@ -291,6 +340,66 @@ export default function FindAPeer() {
               })}
             </div>
           </div>
+
+          {members.length > 0 && (
+            <div>
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-[15px] font-bold text-ink">
+                  Verified members
+                </h2>
+                <span className="text-[12px] text-muted">
+                  Real accounts from the MindSpace community
+                </span>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {members.map((member, index) => {
+                  const isConnected = connected[member._id];
+                  const isConnecting = connecting[member._id];
+                  return (
+                    <Card key={member._id} className="p-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar
+                          name={member.name}
+                          size={40}
+                          gradient={memberGradients[index % memberGradients.length]}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[13px] font-bold text-ink">
+                            {member.name}
+                          </p>
+                          <p className="truncate text-xs text-muted">
+                            Joined {joinedLabel(member.createdAt)}
+                          </p>
+                        </div>
+                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-mint-soft px-2 py-0.5 text-[10px] font-semibold text-mint-deep">
+                          <ShieldCheck size={11} />
+                          Verified
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => connectToMember(member)}
+                        disabled={isConnecting}
+                        className={`mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[12.5px] font-semibold transition-colors ${
+                          isConnected
+                            ? "bg-mint-soft text-mint-deep"
+                            : "border border-line bg-white text-ink hover:bg-cream disabled:opacity-60"
+                        }`}
+                      >
+                        {isConnected ? (
+                          "Connected"
+                        ) : (
+                          <>
+                            <UserPlus size={14} />
+                            {isConnecting ? "Connecting..." : "Connect"}
+                          </>
+                        )}
+                      </button>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
