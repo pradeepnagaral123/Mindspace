@@ -175,6 +175,17 @@ export function initSocket(httpServer, corsOrigin) {
             ? connection.peer.toString()
             : connection.user.toString();
 
+        if (message.deleted) {
+          await Message.deleteOne({ _id: message._id });
+          io.to(`user:${userId}`)
+            .to(`user:${peerId}`)
+            .emit("message:removed", {
+              connectionId: connection._id.toString(),
+              messageId: message._id.toString(),
+            });
+          return ack?.({ ok: true, removed: true });
+        }
+
         await Message.updateOne(
           { _id: message._id },
           { $set: { deleted: true, deletedAt: new Date(), text: "" } }

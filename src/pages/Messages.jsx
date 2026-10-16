@@ -162,6 +162,16 @@ export default function Messages() {
       fetchThreads();
     });
 
+    socket.on("message:removed", ({ connectionId, messageId }) => {
+      setMessages((current) => ({
+        ...current,
+        [connectionId]: (current[connectionId] || []).filter(
+          (m) => String(m._id) !== String(messageId),
+        ),
+      }));
+      fetchThreads();
+    });
+
     socket.on("typing", ({ connectionId, typing }) => {
       setPeerTyping((current) => ({ ...current, [connectionId]: typing }));
     });
@@ -510,7 +520,7 @@ export default function Messages() {
                         </span>
                       )}
                       <div className="group flex items-center gap-1.5">
-                        {mine && !isDeleted && (
+                        {mine && (
                           <div className="flex shrink-0 items-center gap-1">
                             {confirming ? (
                               <>
@@ -518,7 +528,7 @@ export default function Messages() {
                                   onClick={() => confirmDelete(message._id)}
                                   className="rounded-lg bg-blossom/15 px-2 py-1 text-[11px] font-semibold text-blossom hover:bg-blossom/25"
                                 >
-                                  Delete
+                                  {isDeleted ? "Delete forever" : "Delete"}
                                 </button>
                                 <button
                                   onClick={() => setPendingDelete(null)}
@@ -529,25 +539,27 @@ export default function Messages() {
                               </>
                             ) : (
                               <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                                <button
-                                  onClick={() => copyMessage(message)}
-                                  title="Copy message"
-                                  aria-label="Copy message"
-                                  className="rounded-lg p-1.5 text-muted hover:bg-cream hover:text-ink"
-                                >
-                                  {copiedId === message._id ? (
-                                    <Check size={14} className="text-mint-deep" />
-                                  ) : (
-                                    <Copy size={14} />
-                                  )}
-                                </button>
+                                {!isDeleted && (
+                                  <button
+                                    onClick={() => copyMessage(message)}
+                                    title="Copy message"
+                                    aria-label="Copy message"
+                                    className="rounded-lg p-1.5 text-muted hover:bg-cream hover:text-ink"
+                                  >
+                                    {copiedId === message._id ? (
+                                      <Check size={14} className="text-mint-deep" />
+                                    ) : (
+                                      <Copy size={14} />
+                                    )}
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => {
                                     setCopiedId(null);
                                     setPendingDelete(message._id);
                                   }}
-                                  title="Delete message"
-                                  aria-label="Delete message"
+                                  title={isDeleted ? "Delete forever" : "Delete message"}
+                                  aria-label={isDeleted ? "Delete forever" : "Delete message"}
                                   className="rounded-lg p-1.5 text-muted hover:bg-blossom/15 hover:text-blossom"
                                 >
                                   <Trash2 size={14} />
