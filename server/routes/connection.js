@@ -14,11 +14,11 @@ router.get("/suggestions", auth, async (req, res) => {
     }).select("user peer");
 
     const myId = req.user._id.toString();
-    const connectedIds = new Set();
+    const connectedIds = new Map();
     connections.forEach((c) => {
       const other =
         c.user.toString() === myId ? c.peer.toString() : c.user.toString();
-      connectedIds.add(other);
+      connectedIds.set(other, c._id.toString());
     });
 
     const users = await User.find({
@@ -33,6 +33,7 @@ router.get("/suggestions", auth, async (req, res) => {
       users: users.map((u) => ({
         ...u.toObject(),
         connected: connectedIds.has(u._id.toString()),
+        connectionId: connectedIds.get(u._id.toString()) || null,
       })),
     });
   } catch (error) {

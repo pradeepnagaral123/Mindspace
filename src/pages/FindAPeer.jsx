@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   MessageCircle,
   RefreshCw,
+  Send,
   ShieldCheck,
   Sparkles,
   ThumbsUp,
@@ -91,6 +93,7 @@ function joinedLabel(date) {
 
 export default function FindAPeer() {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [intent, setIntent] = useState("both");
   const [topics, setTopics] = useState(["Anxiety"]);
   const [connected, setConnected] = useState({});
@@ -98,6 +101,7 @@ export default function FindAPeer() {
   const [currentPeer, setCurrentPeer] = useState(peers[0]);
   const [members, setMembers] = useState([]);
   const [connecting, setConnecting] = useState({});
+  const [memberConnectionIds, setMemberConnectionIds] = useState({});
 
   useEffect(() => {
     if (!token) return;
@@ -112,6 +116,13 @@ export default function FindAPeer() {
             const next = { ...current };
             data.users.forEach((u) => {
               if (u.connected) next[u._id] = true;
+            });
+            return next;
+          });
+          setMemberConnectionIds((current) => {
+            const next = { ...current };
+            data.users.forEach((u) => {
+              if (u.connectionId) next[u._id] = u.connectionId;
             });
             return next;
           });
@@ -133,7 +144,14 @@ export default function FindAPeer() {
         body: JSON.stringify({ peerId: member._id }),
       });
       if (res.ok) {
+        const data = await res.json().catch(() => null);
         setConnected((current) => ({ ...current, [member._id]: true }));
+        if (data?.connection?._id) {
+          setMemberConnectionIds((current) => ({
+            ...current,
+            [member._id]: data.connection._id,
+          }));
+        }
       }
     } catch {
       // network failure — leave button unchanged
@@ -385,24 +403,39 @@ export default function FindAPeer() {
                           Verified
                         </span>
                       </div>
-                      <button
-                        onClick={() => connectToMember(member)}
-                        disabled={isConnecting}
-                        className={`mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[12.5px] font-semibold transition-colors ${
-                          isConnected
-                            ? "bg-mint-soft text-mint-deep"
-                            : "border border-line bg-white text-ink hover:bg-cream disabled:opacity-60"
-                        }`}
-                      >
-                        {isConnected ? (
-                          "Connected"
-                        ) : (
-                          <>
-                            <UserPlus size={14} />
-                            {isConnecting ? "Connecting..." : "Connect"}
-                          </>
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          onClick={() => connectToMember(member)}
+                          disabled={isConnecting || isConnected}
+                          className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[12.5px] font-semibold transition-colors ${
+                            isConnected
+                              ? "bg-mint-soft text-mint-deep"
+                              : "border border-line bg-white text-ink hover:bg-cream disabled:opacity-60"
+                          }`}
+                        >
+                          {isConnected ? (
+                            "Connected"
+                          ) : (
+                            <>
+                              <UserPlus size={14} />
+                              {isConnecting ? "Connecting..." : "Connect"}
+                            </>
+                          )}
+                        </button>
+                        {isConnected && memberConnectionIds[member._id] && (
+                          <button
+                            onClick={() =>
+                              navigate(
+                                `/messages?connection=${memberConnectionIds[member._id]}`,
+                              )
+                            }
+                            className="flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-navy px-4 py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-navy-2"
+                          >
+                            <Send size={14} />
+                            Message
+                          </button>
                         )}
-                      </button>
+                      </div>
                     </Card>
                   );
                 })}

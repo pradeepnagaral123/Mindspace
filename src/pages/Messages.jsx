@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import {
   Ban,
@@ -54,6 +54,7 @@ const sortThreads = (list) =>
 
 export default function Messages() {
   const { token, user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [threads, setThreads] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [messages, setMessages] = useState({});
@@ -85,6 +86,11 @@ export default function Messages() {
   useEffect(() => {
     activeIdRef.current = activeId;
   }, [activeId]);
+
+  const targetConnection = searchParams.get("connection");
+  useEffect(() => {
+    if (targetConnection) setActiveId(targetConnection);
+  }, [targetConnection]);
 
   const fetchThreads = useCallback(async () => {
     if (!token) return;
