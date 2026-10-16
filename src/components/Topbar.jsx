@@ -1,16 +1,9 @@
-import { useState } from "react";
 import { Bell, Menu } from "lucide-react";
 import Avatar from "./Avatar";
 import { useAuth } from "../context/AuthContext";
 
 export default function Topbar({ onMenu }) {
   const { user } = useAuth();
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-
-  const notifications = [
-    { title: "Maya replied to your message", time: "2m ago" },
-    { title: "New post in Student Support Circle", time: "26m ago" },
-  ];
 
   return (
     <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-line/70 bg-cream/85 px-4 py-3 backdrop-blur-md sm:px-6 lg:px-8">
@@ -23,35 +16,12 @@ export default function Topbar({ onMenu }) {
       </button>
 
       <div className="relative ml-auto flex items-center gap-2 sm:gap-3">
-        <div className="relative">
-          <button
-            onClick={() => setNotificationsOpen((value) => !value)}
-            className="relative rounded-xl border border-line bg-white p-2.5 text-ink shadow-sm transition-colors hover:bg-cream"
-            aria-label="Notifications"
-          >
-            <Bell size={19} />
-            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-blossom-deep ring-2 ring-white" />
-          </button>
-
-          {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-line bg-white p-2 shadow-xl">
-              <p className="px-3 py-2 text-sm font-semibold text-ink">
-                Notifications
-              </p>
-              {notifications.map((notification) => (
-                <button
-                  key={notification.title}
-                  className="w-full rounded-xl px-3 py-2.5 text-left hover:bg-cream"
-                >
-                  <p className="text-[13px] font-medium text-ink">
-                    {notification.title}
-                  </p>
-                  <p className="text-xs text-muted">{notification.time}</p>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <button
+          className="relative rounded-xl border border-line bg-white p-2.5 text-ink shadow-sm transition-colors hover:bg-cream"
+          aria-label="Notifications"
+        >
+          <Bell size={19} />
+        </button>
 
         <div className="flex items-center gap-2.5 rounded-xl border border-line bg-white py-1.5 pr-3 pl-1.5 shadow-sm">
           <Avatar name={user.name} size={32} gradient="blossom" />
