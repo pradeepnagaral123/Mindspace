@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import "../index.css";
 import sittingWomen from "../images/sitting_women.png";
@@ -632,6 +633,7 @@ function AuthModal({ mode, setMode, initialError = "", onClose, onSuccess }) {
   const [error, setError] = useState(initialError);
   const [notice, setNotice] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login, register } = useAuth();
 
   const update = (field) => (event) => {
@@ -734,12 +736,23 @@ function AuthModal({ mode, setMode, initialError = "", onClose, onSuccess }) {
 
           <label>
             <span>Password</span>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={update("password")}
-            />
+            <div className="auth-password">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={form.password}
+                onChange={update("password")}
+              />
+              <button
+                type="button"
+                className="auth-eye"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                title={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </label>
 
           {mode === "signin" ? (

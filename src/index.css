@@ -1560,6 +1560,38 @@ footer {
   box-shadow: 0 0 0 3px rgba(85, 203, 170, 0.2);
 }
 
+.auth-password {
+  position: relative;
+  display: flex;
+}
+
+.auth-password input {
+  width: 100%;
+  padding-right: 42px;
+}
+
+.auth-eye {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.auth-eye:hover {
+  color: var(--mint-dark);
+  background: rgba(85, 203, 170, 0.12);
+}
+
 .auth-forgot {
   align-self: flex-end;
   font-size: 11px;
