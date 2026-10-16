@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Connection from "../models/Connection.js";
 import User from "../models/User.js";
 import auth from "../middleware/auth.js";
+import { getIO } from "../socket.js";
 
 const router = express.Router();
 
@@ -65,6 +66,27 @@ router.post("/", auth, async (req, res) => {
       status: "accepted",
     });
     await connection.populate("peer", "name avatar");
+
+    const socketPayload = {
+      connectionId: connection._id.toString(),
+      peer: {
+        _id: peer._id,
+        name: peer.name,
+        avatar: peer.avatar || null,
+      },
+    };
+    const io = getIO();
+    if (io) {
+      io.to(`user:${req.user._id}`).emit("connection:new", socketPayload);
+      io.to(`user:${peerId}`).emit("connection:new", {
+        connectionId: connection._id.toString(),
+        peer: {
+          _id: req.user._id,
+          name: req.user.name,
+          avatar: req.user.avatar || null,
+        },
+      });
+    }
 
     res.status(201).json({ connection });
   } catch (error) {

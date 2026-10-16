@@ -1,100 +1,299 @@
-import { useState } from "react";
-import { MoreVertical, Paperclip, Search, Send, Smile } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { io } from "socket.io-client";
+import {
+  Check,
+  CheckCheck,
+  MessageCircle,
+  MoreVertical,
+  Paperclip,
+  Search,
+  Send,
+  Smile,
+  UserPlus,
+} from "lucide-react";
 import Card from "../components/Card";
 import Avatar from "../components/Avatar";
+import { useAuth } from "../context/AuthContext";
 
-const initialThreads = [
-  {
-    id: "maya",
-    name: "Maya Kapoor",
-    initials: "MK",
-    gradient: "mint",
-    status: "online",
-    preview: "You're not alone — I felt the exact same way last semester.",
-    time: "2m",
-    unread: 1,
-    messages: [
-      { from: "peer", text: "Hey! How's your week going? 🌿" },
-      { from: "me", text: "Honestly a little overwhelmed with assignments." },
-      { from: "peer", text: "You're not alone — I felt the exact same way last semester." },
-    ],
-  },
-  {
-    id: "daniel",
-    name: "Daniel Fernandes",
-    initials: "DF",
-    gradient: "lavender",
-    status: "online",
-    preview: "Thanks for sharing that. It really helped me today.",
-    time: "18m",
-    unread: 0,
-    messages: [
-      { from: "peer", text: "Thanks for sharing that. It really helped me today." },
-      { from: "me", text: "That means a lot. We've got each other's backs." },
-    ],
-  },
-  {
-    id: "riya",
-    name: "Riya Mehta",
-    initials: "RM",
-    gradient: "peach",
-    status: "away",
-    preview: "Sending you a warm hug today 🌷",
-    time: "1h",
-    unread: 2,
-    messages: [
-      { from: "peer", text: "Sending you a warm hug today 🌷" },
-      { from: "peer", text: "Take a break if you need to, okay?" },
-    ],
-  },
-  {
-    id: "arjun",
-    name: "Arjun Nair",
-    initials: "AN",
-    gradient: "sun",
-    status: "online",
-    preview: "The breathwork session helped a lot, thank you!",
-    time: "Yesterday",
-    unread: 0,
-    messages: [
-      { from: "peer", text: "The breathwork session helped a lot, thank you!" },
-      { from: "me", text: "So glad to hear it. Same time next week?" },
-    ],
-  },
-];
+const API_URL = import.meta.env.VITE_API_URL;
+
+const gradients = ["mint", "lavender", "peach", "blossom", "sun"];
+
+function timeAgo(date) {
+  const diff = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days}d`;
+  return new Date(date).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function clockTime(date) {
+  return new Date(date).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+const sortThreads = (list) =>
+  [...list].sort(
+    (a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt),
+  );
 
 export default function Messages() {
-  const [threads, setThreads] = useState(initialThreads);
-  const [activeId, setActiveId] = useState(initialThreads[0].id);
+  const { token, user } = useAuth();
+  const [threads, setThreads] = useState([]);
+  const [activeId, setActiveId] = useState(null);
+  const [messages, setMessages] = useState({});
   const [draft, setDraft] = useState("");
+  const [peerTyping, setPeerTyping] = useState({});
+  const [loadingThreads, setLoadingThreads] = useState(true);
+  const [search, setSearch] = useState("");
+  const [socketLive, setSocketLive] = useState(false);
 
-  const activeThread = threads.find((thread) => thread.id === activeId);
+  const socketRef = useRef(null);
+  const activeIdRef = useRef(null);
+  const listRef = useRef(null);
+  const lastTypingRef = useRef(0);
 
-  const openThread = (id) => {
-    setActiveId(id);
+  useEffect(() => {
+    activeIdRef.current = activeId;
+  }, [activeId]);
+
+  const fetchThreads = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/messages/threads`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const list = Array.isArray(data?.threads) ? data.threads : [];
+      setThreads(sortThreads(list));
+      setActiveId((current) => current || list[0]?.connectionId || null);
+    } catch {
+      // keep whatever we have
+    } finally {
+      setLoadingThreads(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchThreads();
+  }, [fetchThreads]);
+
+  useEffect(() => {
+    if (!token) return;
+    const socket = io(API_URL, { auth: { token } });
+    socketRef.current = socket;
+
+    socket.on("connect", () => setSocketLive(true));
+    socket.on("disconnect", () => setSocketLive(false));
+
+    socket.on("message:new", (msg) => {
+      const fromMe = user && String(msg.sender._id) === String(user._id);
+      setMessages((current) => {
+        const list = current[msg.connection] || [];
+        if (list.some((m) => m._id === msg._id)) return current;
+        if (fromMe) {
+          const idx = list.findIndex((m) => m.pending && m.text === msg.text);
+          if (idx !== -1) {
+            const next = [...list];
+            next[idx] = msg;
+            return { ...current, [msg.connection]: next };
+          }
+        }
+        return { ...current, [msg.connection]: [...list, msg] };
+      });
+
+      const isActive = msg.connection === activeIdRef.current;
+      setThreads((current) => {
+        if (!current.some((t) => t.connectionId === msg.connection)) {
+          fetchThreads();
+          return current;
+        }
+        return sortThreads(
+          current.map((t) =>
+            t.connectionId === msg.connection
+              ? {
+                  ...t,
+                  lastMessage: msg.text,
+                  lastMessageAt: msg.createdAt,
+                  unread:
+                    fromMe || isActive ? 0 : (t.unread || 0) + 1,
+                }
+              : t,
+          ),
+        );
+      });
+
+      if (isActive && !fromMe) {
+        socket.emit("messages:read", { connectionId: msg.connection });
+      }
+    });
+
+    socket.on("typing", ({ connectionId, typing }) => {
+      setPeerTyping((current) => ({ ...current, [connectionId]: typing }));
+    });
+
+    socket.on("messages:read", ({ connectionId }) => {
+      setMessages((current) => ({
+        ...current,
+        [connectionId]: (current[connectionId] || []).map((m) =>
+          user && inStringEqual(m.sender, user._id)
+            ? { ...m, readAt: m.readAt || new Date().toISOString() }
+            : m,
+        ),
+      }));
+    });
+
+    socket.on("presence", ({ userId, online }) => {
+      setThreads((current) =>
+        current.map((t) =>
+          String(t.peer._id) === String(userId)
+            ? { ...t, peer: { ...t.peer, online } }
+            : t,
+        ),
+      );
+    });
+
+    socket.on("connection:new", () => fetchThreads());
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [token, user, fetchThreads]);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages, activeId, peerTyping]);
+
+  const openThread = async (connectionId) => {
+    setActiveId(connectionId);
     setThreads((current) =>
-      current.map((thread) =>
-        thread.id === id ? { ...thread, unread: 0 } : thread,
+      current.map((t) =>
+        t.connectionId === connectionId ? { ...t, unread: 0 } : t,
       ),
     );
+    setPeerTyping((current) => ({ ...current, [connectionId]: false }));
+    socketRef.current?.emit("messages:read", { connectionId });
+    if (!messages[connectionId] && token) {
+      try {
+        const res = await fetch(`${API_URL}/messages/${connectionId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data?.messages)) {
+            setMessages((current) => ({
+              ...current,
+              [connectionId]: data.messages,
+            }));
+          }
+        }
+      } catch {
+        // leave empty; socket messages will still arrive
+      }
+    }
   };
 
   const sendMessage = () => {
-    if (!draft.trim()) return;
+    const text = draft.trim();
+    const socket = socketRef.current;
+    const connId = activeIdRef.current;
+    if (!text || !socket || !connId) return;
+
+    const tempId = `temp-${Date.now()}`;
+    const optimistic = {
+      _id: tempId,
+      connection: connId,
+      sender: { _id: user?._id, name: user?.name },
+      text,
+      readAt: null,
+      createdAt: new Date().toISOString(),
+      pending: true,
+    };
+
+    setMessages((current) => ({
+      ...current,
+      [connId]: [...(current[connId] || []), optimistic],
+    }));
     setThreads((current) =>
-      current.map((thread) =>
-        thread.id === activeId
-          ? {
-              ...thread,
-              messages: [...thread.messages, { from: "me", text: draft.trim() }],
-              preview: draft.trim(),
-              time: "Now",
-            }
-          : thread,
+      sortThreads(
+        current.map((t) =>
+          t.connectionId === connId
+            ? {
+                ...t,
+                lastMessage: text,
+                lastMessageAt: optimistic.createdAt,
+              }
+            : t,
+        ),
       ),
     );
     setDraft("");
+    socket.emit("typing", { connectionId: connId, typing: false });
+    lastTypingRef.current = 0;
+
+    socket.emit("message:send", { connectionId: connId, text }, (response) => {
+      if (response?.error) {
+        setMessages((current) => ({
+          ...current,
+          [connId]: (current[connId] || []).filter((m) => m._id !== tempId),
+        }));
+        return;
+      }
+      if (response?.message) {
+        setMessages((current) => {
+          const list = current[connId] || [];
+          const idx = list.findIndex((m) => m._id === tempId);
+          if (idx === -1) return current;
+          const next = [...list];
+          next[idx] = response.message;
+          return { ...current, [connId]: next };
+        });
+      }
+    });
   };
+
+  const handleDraft = (value) => {
+    setDraft(value);
+    const socket = socketRef.current;
+    const connId = activeIdRef.current;
+    if (!socket || !connId) return;
+    const now = Date.now();
+    if (value.trim() && now - lastTypingRef.current > 1500) {
+      lastTypingRef.current = now;
+      socket.emit("typing", { connectionId: connId, typing: true });
+    }
+    if (!value.trim()) {
+      socket.emit("typing", { connectionId: connId, typing: false });
+      lastTypingRef.current = 0;
+    }
+  };
+
+  const activeThread = threads.find((t) => t.connectionId === activeId);
+  const activeMessages = messages[activeId] || [];
+  const activeGradient = useMemo(() => {
+    const index = threads.findIndex((t) => t.connectionId === activeId);
+    return gradients[(index < 0 ? 0 : index) % gradients.length];
+  }, [threads, activeId]);
+
+  const visibleThreads = search.trim()
+    ? threads.filter((t) =>
+        t.peer.name.toLowerCase().includes(search.trim().toLowerCase()),
+      )
+    : threads;
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -104,6 +303,9 @@ export default function Messages() {
         </h1>
         <p className="mt-1 text-sm text-muted">
           Your supportive conversations, all in one place.
+          {!socketLive && (
+            <span className="ml-2 text-xs text-sun-deep">Reconnecting…</span>
+          )}
         </p>
       </div>
 
@@ -116,6 +318,8 @@ export default function Messages() {
                 className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted"
               />
               <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search conversations..."
                 className="w-full rounded-xl border border-line bg-cream py-2.5 pr-3 pl-10 text-sm text-ink outline-none placeholder:text-muted/70 focus:border-mint-deep focus:bg-white focus:ring-2 focus:ring-mint/40"
               />
@@ -123,21 +327,51 @@ export default function Messages() {
           </div>
 
           <div className="space-y-1 overflow-y-auto p-1.5">
-            {threads.map((thread) => {
-              const active = thread.id === activeId;
+            {loadingThreads && (
+              <p className="px-3 py-6 text-center text-[13px] text-muted">
+                Loading conversations…
+              </p>
+            )}
+
+            {!loadingThreads && visibleThreads.length === 0 && (
+              <div className="px-4 py-8 text-center">
+                <MessageCircle size={22} className="mx-auto text-muted" />
+                <p className="mt-2 text-[13px] font-semibold text-ink">
+                  No conversations yet
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-muted">
+                  Connect with someone on Find a Peer and your chat will show
+                  up here.
+                </p>
+                <Link
+                  to="/find-a-peer"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-navy px-3 py-2 text-[12px] font-semibold text-white hover:bg-navy-2"
+                >
+                  <UserPlus size={14} />
+                  Find a Peer
+                </Link>
+              </div>
+            )}
+
+            {visibleThreads.map((thread) => {
+              const active = thread.connectionId === activeId;
+              const index = threads.findIndex(
+                (t) => t.connectionId === thread.connectionId,
+              );
+              const typing = peerTyping[thread.connectionId];
               return (
                 <button
-                  key={thread.id}
-                  onClick={() => openThread(thread.id)}
+                  key={thread.connectionId}
+                  onClick={() => openThread(thread.connectionId)}
                   className={`flex w-full items-start gap-3 rounded-xl p-2.5 text-left transition-colors ${
                     active ? "bg-navy" : "hover:bg-cream"
                   }`}
                 >
                   <Avatar
-                    name={thread.name}
+                    name={thread.peer.name}
                     size={40}
-                    gradient={thread.gradient}
-                    status={thread.status}
+                    gradient={gradients[index % gradients.length]}
+                    status={thread.peer.online ? "online" : "offline"}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
@@ -146,22 +380,26 @@ export default function Messages() {
                           active ? "text-white" : "text-ink"
                         }`}
                       >
-                        {thread.name}
+                        {thread.peer.name}
                       </p>
                       <span
                         className={`shrink-0 text-[11px] ${
                           active ? "text-white/50" : "text-muted"
                         }`}
                       >
-                        {thread.time}
+                        {thread.lastMessageAt ? timeAgo(thread.lastMessageAt) : ""}
                       </span>
                     </div>
                     <p
                       className={`mt-0.5 truncate text-[13px] ${
-                        active ? "text-white/70" : "text-muted"
+                        typing
+                          ? "text-mint-deep italic"
+                          : active
+                            ? "text-white/70"
+                            : "text-muted"
                       }`}
                     >
-                      {thread.preview}
+                      {typing ? "typing…" : thread.lastMessage || "Say hello 👋"}
                     </p>
                   </div>
                   {thread.unread > 0 && (
@@ -176,90 +414,163 @@ export default function Messages() {
         </Card>
 
         <Card className="flex min-h-[540px] flex-col overflow-hidden">
-          <div className="flex items-center justify-between border-b border-line/70 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <Avatar
-                name={activeThread.name}
-                size={38}
-                gradient={activeThread.gradient}
-                status={activeThread.status}
-              />
-              <div>
-                <p className="text-sm font-bold text-ink">
-                  {activeThread.name}
-                </p>
-                <p
-                  className={`text-xs ${
-                    activeThread.status === "online"
-                      ? "text-mint-deep"
-                      : "text-muted"
-                  }`}
-                >
-                  {activeThread.status === "online" ? "Online now" : "Away"}
-                </p>
-              </div>
-            </div>
-            <button
-              className="rounded-lg p-2 text-muted hover:bg-cream hover:text-ink"
-              aria-label="More options"
-            >
-              <MoreVertical size={18} />
-            </button>
-          </div>
-
-          <div className="flex-1 space-y-3 overflow-y-auto bg-cream/40 px-5 py-5">
-            {activeThread.messages.map((message, index) => {
-              const mine = message.from === "me";
-              return (
-                <div
-                  key={index}
-                  className={`flex ${mine ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                      mine
-                        ? "rounded-br-md bg-navy text-white"
-                        : "rounded-bl-md border border-line bg-white text-ink"
-                    }`}
-                  >
-                    {message.text}
+          {activeThread ? (
+            <>
+              <div className="flex items-center justify-between border-b border-line/70 px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <Avatar
+                    name={activeThread.peer.name}
+                    size={38}
+                    gradient={activeGradient}
+                    status={activeThread.peer.online ? "online" : "offline"}
+                  />
+                  <div>
+                    <p className="text-sm font-bold text-ink">
+                      {activeThread.peer.name}
+                    </p>
+                    <p
+                      className={`text-xs ${
+                        peerTyping[activeThread.connectionId]
+                          ? "text-mint-deep"
+                          : activeThread.peer.online
+                            ? "text-mint-deep"
+                            : "text-muted"
+                      }`}
+                    >
+                      {peerTyping[activeThread.connectionId]
+                        ? "typing…"
+                        : activeThread.peer.online
+                          ? "Online now"
+                          : "Offline"}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+                <button
+                  className="rounded-lg p-2 text-muted hover:bg-cream hover:text-ink"
+                  aria-label="More options"
+                >
+                  <MoreVertical size={18} />
+                </button>
+              </div>
 
-          <div className="flex items-center gap-2 border-t border-line/70 bg-white px-4 py-3">
-            <button
-              className="rounded-lg p-2 text-muted hover:bg-cream hover:text-mint-deep"
-              aria-label="Add attachment"
-            >
-              <Paperclip size={18} />
-            </button>
-            <button
-              className="rounded-lg p-2 text-muted hover:bg-cream hover:text-mint-deep"
-              aria-label="Add emoji"
-            >
-              <Smile size={18} />
-            </button>
-            <input
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              onKeyDown={(event) => event.key === "Enter" && sendMessage()}
-              placeholder="Write a kind message..."
-              className="flex-1 rounded-xl border border-line bg-cream px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-muted/70 focus:border-mint-deep focus:bg-white focus:ring-2 focus:ring-mint/40"
-            />
-            <button
-              onClick={sendMessage}
-              disabled={!draft.trim()}
-              className="flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-2 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <Send size={15} />
-              Send
-            </button>
-          </div>
+              <div
+                ref={listRef}
+                className="flex-1 space-y-3 overflow-y-auto bg-cream/40 px-5 py-5"
+              >
+                {activeMessages.length === 0 && (
+                  <p className="py-10 text-center text-[13px] text-muted">
+                    No messages yet — start the conversation with something
+                    kind.
+                  </p>
+                )}
+                {activeMessages.map((message) => {
+                  const mine = user && inStringEqual(message.sender, user._id);
+                  return (
+                    <div
+                      key={message._id}
+                      className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                          mine
+                            ? "rounded-br-md bg-navy text-white"
+                            : "rounded-bl-md border border-line bg-white text-ink"
+                        } ${message.pending ? "opacity-70" : ""}`}
+                      >
+                        {message.text}
+                        <span
+                          className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
+                            mine ? "text-white/50" : "text-muted"
+                          }`}
+                        >
+                          {clockTime(message.createdAt)}
+                          {mine &&
+                            (message.readAt ? (
+                              <CheckCheck size={13} className="text-sky-300" />
+                            ) : (
+                              <Check size={13} className="text-white/50" />
+                            ))}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+                {peerTyping[activeId] && (
+                  <div className="flex justify-start">
+                    <div className="rounded-2xl rounded-bl-md border border-line bg-white px-4 py-2.5 text-sm text-muted">
+                      <span className="inline-flex gap-1">
+                        <Dot /> <Dot delay="0.15s" /> <Dot delay="0.3s" />
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 border-t border-line/70 bg-white px-4 py-3">
+                <button
+                  className="rounded-lg p-2 text-muted hover:bg-cream hover:text-mint-deep"
+                  aria-label="Add attachment"
+                >
+                  <Paperclip size={18} />
+                </button>
+                <button
+                  className="rounded-lg p-2 text-muted hover:bg-cream hover:text-mint-deep"
+                  aria-label="Add emoji"
+                >
+                  <Smile size={18} />
+                </button>
+                <input
+                  value={draft}
+                  onChange={(event) => handleDraft(event.target.value)}
+                  onKeyDown={(event) => event.key === "Enter" && sendMessage()}
+                  placeholder="Write a kind message..."
+                  className="flex-1 rounded-xl border border-line bg-cream px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-muted/70 focus:border-mint-deep focus:bg-white focus:ring-2 focus:ring-mint/40"
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={!draft.trim()}
+                  className="flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-2 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Send size={15} />
+                  Send
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
+              <MessageCircle size={34} className="text-muted" />
+              <p className="mt-3 text-sm font-bold text-ink">
+                No conversation selected
+              </p>
+              <p className="mt-1 max-w-xs text-[13px] leading-relaxed text-muted">
+                Connect with someone on Find a Peer to start a real-time
+                conversation.
+              </p>
+              <Link
+                to="/find-a-peer"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-navy-2"
+              >
+                <UserPlus size={15} />
+                Find a Peer
+              </Link>
+            </div>
+          )}
         </Card>
       </div>
     </div>
+  );
+}
+
+function inStringEqual(sender, userId) {
+  const senderId = sender && typeof sender === "object" ? sender._id : sender;
+  return String(senderId) === String(userId);
+}
+
+function Dot({ delay = "0s" }) {
+  return (
+    <span
+      className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted"
+      style={{ animationDelay: delay }}
+    />
   );
 }
