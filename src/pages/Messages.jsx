@@ -17,6 +17,7 @@ import Avatar from "../components/Avatar";
 import { useAuth } from "../context/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
+const SOCKET_URL = API_URL ? API_URL.replace(/\/api\/?$/, "") : undefined;
 
 const gradients = ["mint", "lavender", "peach", "blossom", "sun"];
 
@@ -92,7 +93,7 @@ export default function Messages() {
 
   useEffect(() => {
     if (!token) return;
-    const socket = io(API_URL, { auth: { token } });
+    const socket = io(SOCKET_URL, { auth: { token } });
     socketRef.current = socket;
 
     socket.on("connect", () => setSocketLive(true));
