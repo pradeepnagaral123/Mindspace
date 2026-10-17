@@ -15,6 +15,7 @@ import {
   X,
   Sparkle,
   PenLine,
+  LogOut,
 } from "lucide-react";
 import Avatar from "./Avatar";
 import { useAuth } from "../context/AuthContext";
@@ -61,7 +62,13 @@ function NavItem({ to, label, icon: Icon, badge, onClick }) {
 }
 
 export default function Sidebar({ open, onClose }) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    onClose?.();
+    logout();
+  };
+
   return (
     <>
       {open && (
@@ -139,6 +146,14 @@ export default function Sidebar({ open, onClose }) {
               <p className="text-xs text-white/50">View Profile</p>
             </div>
           </NavLink>
+
+          <button
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+          >
+            <LogOut size={19} strokeWidth={2} />
+            Log out
+          </button>
         </div>
       </aside>
     </>

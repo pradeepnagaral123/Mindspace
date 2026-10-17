@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   AtSign,
   Check,
@@ -26,7 +26,8 @@ const interests = [
 ];
 
 export default function Profile() {
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [journalCount, setJournalCount] = useState(0);
   const [connectionCount, setConnectionCount] = useState(0);
@@ -67,6 +68,11 @@ export default function Profile() {
 
   const save = () => {
     setEditing(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/", { replace: true });
   };
 
   return (
@@ -273,7 +279,10 @@ export default function Profile() {
             You'll still keep all your check-ins, journal and connections.
           </p>
         </div>
-        <button className="flex items-center gap-2 rounded-xl border border-blossom-deep/30 bg-white px-4 py-2.5 text-[13px] font-semibold text-blossom-deep transition-colors hover:bg-blossom-soft">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 rounded-xl border border-blossom-deep/30 bg-white px-4 py-2.5 text-[13px] font-semibold text-blossom-deep transition-colors hover:bg-blossom-soft"
+        >
           <LogOut size={15} />
           Sign out
         </button>
