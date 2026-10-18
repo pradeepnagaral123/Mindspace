@@ -166,7 +166,7 @@ export default function Profile() {
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white/45 to-transparent" />
         </div>
 
-        <div className="px-5 pb-5 sm:px-6 sm:pb-6">
+        <div className="relative z-10 px-5 pb-5 sm:px-6 sm:pb-6">
           <div className="-mt-12 flex flex-wrap items-end justify-between gap-4">
             <div className="flex items-end gap-4">
               <div className="relative">
