@@ -120,7 +120,7 @@ export const communities = [
     description: "Exams, deadlines and everything in between. We get it.",
     category: "Support",
     accent: "bg-mint-soft text-mint-deep",
-    banner: "https://images.unsplash.com/photo-1741699427706-7bfb38c716d8?auto=format&fit=crop&w=1600&q=70",
+    banner: "https://images.unsplash.com/photo-1741699427706-7bfb38c716d8?fm=webp&fit=crop&w=1600&q=70",
     joined: false,
     posts: [
       {
@@ -146,7 +146,7 @@ export const communities = [
     description: "Gentle practices and kind words for anxious days.",
     category: "Wellbeing",
     accent: "bg-lavender-soft text-lavender-deep",
-    banner: "https://images.unsplash.com/photo-1586348943529-beaae6c28db9?auto=format&fit=crop&w=1600&q=70",
+    banner: "https://images.unsplash.com/photo-1586348943529-beaae6c28db9?fm=webp&fit=crop&w=1600&q=70",
     joined: false,
     posts: [
       {
@@ -172,7 +172,7 @@ export const communities = [
     description: "Slow down, breathe and notice the small good things.",
     category: "Mindfulness",
     accent: "bg-blossom-soft text-blossom-deep",
-    banner: "https://images.unsplash.com/photo-1516676839530-135a545cce02?auto=format&fit=crop&w=1600&q=70",
+    banner: "https://images.unsplash.com/photo-1516676839530-135a545cce02?fm=webp&fit=crop&w=1600&q=70",
     joined: false,
     posts: [
       {
@@ -198,7 +198,7 @@ export const communities = [
     description: "Sleepless nights, big feelings and tiny victories.",
     category: "Support",
     accent: "bg-peach-soft text-peach-deep",
-    banner: "https://images.unsplash.com/photo-1761891917575-c3c065f623ce?auto=format&fit=crop&w=1600&q=70",
+    banner: "https://images.unsplash.com/photo-1761891917575-c3c065f623ce?fm=webp&fit=crop&w=1600&q=70",
     joined: false,
     posts: [
       {
@@ -224,7 +224,7 @@ export const communities = [
     description: "Wind-down rituals and stories to help you rest.",
     category: "Wellbeing",
     accent: "bg-sun-soft text-sun-deep",
-    banner: "https://images.unsplash.com/photo-1757417983938-2c2a931d41aa?auto=format&fit=crop&w=1600&q=70",
+    banner: "https://images.unsplash.com/photo-1757417983938-2c2a931d41aa?fm=webp&fit=crop&w=1600&q=70",
     joined: false,
     posts: [
       {
@@ -250,7 +250,7 @@ export const communities = [
     description: "Five minutes a day to reset your nervous system.",
     category: "Mindfulness",
     accent: "bg-mint-soft text-mint-deep",
-    banner: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=70",
+    banner: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?fm=webp&fit=crop&w=1600&q=70",
     joined: false,
     posts: [
       {
@@ -276,7 +276,7 @@ export const communities = [
     description: "A soft place to sit with loss — at your own pace.",
     category: "Support",
     accent: "bg-lavender-soft text-lavender-deep",
-    banner: "https://images.unsplash.com/photo-1503891617560-5b8c2e28cbf6?auto=format&fit=crop&w=1600&q=70",
+    banner: "https://images.unsplash.com/photo-1503891617560-5b8c2e28cbf6?fm=webp&fit=crop&w=1600&q=70",
     joined: false,
     posts: [
       {
@@ -302,7 +302,7 @@ export const communities = [
     description: "Small habits, gentle reminders, one day at a time.",
     category: "Wellbeing",
     accent: "bg-blossom-soft text-blossom-deep",
-    banner: "https://images.unsplash.com/photo-1763210096883-7633ceda531b?auto=format&fit=crop&w=1600&q=70",
+    banner: "https://images.unsplash.com/photo-1763210096883-7633ceda531b?fm=webp&fit=crop&w=1600&q=70",
     joined: false,
     posts: [
       {
@@ -328,7 +328,7 @@ export const communities = [
     description: "Guided sits and shared quiet — together is easier.",
     category: "Mindfulness",
     accent: "bg-mint-soft text-mint-deep",
-    banner: "https://images.unsplash.com/photo-1758599878246-176989b873de?auto=format&fit=crop&w=1600&q=70",
+    banner: "https://images.unsplash.com/photo-1758599878246-176989b873de?fm=webp&fit=crop&w=1600&q=70",
     joined: false,
     posts: [
       {
