@@ -128,15 +128,15 @@ export default function Communities() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex rounded-xl border border-line bg-white p-1 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-colors ${
+              className={`rounded-xl border px-4 py-2 text-[13px] font-semibold shadow-sm transition-colors ${
                 activeTab === tab
-                  ? "bg-navy text-white"
-                  : "text-muted hover:text-ink"
+                  ? "border-navy bg-navy text-white"
+                  : "border-line bg-white text-muted hover:bg-cream hover:text-ink"
               }`}
             >
               {tab}
@@ -174,27 +174,15 @@ export default function Communities() {
                 key={community.id}
                 className="group flex flex-col p-5 transition-shadow hover:shadow-md"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <span
-                    className={`flex h-12 w-12 items-center justify-center rounded-2xl ${community.accent}`}
-                  >
-                    <Icon name={community.icon} size={22} strokeWidth={2} />
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    {community.realId && (
-                      <span className="rounded-full bg-mint-deep px-2 py-0.5 text-[10px] font-bold text-white">
-                        Live
-                      </span>
-                    )}
-                    <span className="rounded-full bg-cream px-2.5 py-0.5 text-[11px] font-semibold text-muted">
-                      {community.category}
-                    </span>
-                  </span>
-                </div>
+                <span
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl ${community.accent}`}
+                >
+                  <Icon name={community.icon} size={22} strokeWidth={2} />
+                </span>
 
                 <button
                   onClick={() => openCommunity(community)}
-                  className="mt-4 text-left text-[15px] font-bold text-ink group-hover:text-mint-deep"
+                  className="mt-4 text-left text-base font-extrabold text-ink group-hover:text-mint-deep"
                 >
                   {community.name}
                 </button>
