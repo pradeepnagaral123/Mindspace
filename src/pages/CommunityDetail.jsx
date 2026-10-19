@@ -27,6 +27,7 @@ import Avatar from "../components/Avatar";
 import sittingWomen from "../images/sitting_women.png";
 import bannerImg from "../images/community-banner.jpg";
 import { useAuth } from "../context/AuthContext";
+import { communities } from "../data/mockData";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -48,40 +49,36 @@ const resourceRows = [
 const hoursAgo = (hours) =>
   new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 
-const mockPosts = [
-  {
-    _id: "mock-1",
-    author: { _id: "mock-u1", name: "Aarav Menon" },
-    text: "Finals week is next week and I keep freezing every time I open my notes. Does anyone have a routine that actually helps with exam anxiety? Even small things would help.",
-    likeCount: 18,
+const mockToCommunity = (community) => ({
+  _id: community.id,
+  name: community.name,
+  description: community.description,
+  category: community.category,
+  icon: community.icon,
+  accent: community.accent,
+  memberCount: community.memberCount,
+  joinedByMe: false,
+  isMock: true,
+});
+
+const buildMockPosts = (community) =>
+  (community?.posts || []).map((post, index) => ({
+    _id: `mock-${community.id}-${index}`,
+    author: { _id: `mock-${community.id}-u${index}`, name: post.author },
+    text: post.text,
+    likeCount: post.likes,
     likedByMe: false,
-    createdAt: hoursAgo(2),
-  },
-  {
-    _id: "mock-2",
-    author: { _id: "mock-u2", name: "Mira Kapoor" },
-    text: "Small win: I finally went to the library for two hours without checking my phone every five minutes. Two hours felt like a whole day, but I'll take it. 🌱",
-    likeCount: 34,
-    likedByMe: true,
-    createdAt: hoursAgo(5),
-  },
-  {
-    _id: "mock-3",
-    author: { _id: "mock-u3", name: "Sam Iyer" },
-    text: "Reminder that a 60% semester is still a semester passed. I used to think anything below perfect was a failure, and I'm slowly learning that rest is part of the work too.",
-    likeCount: 42,
-    likedByMe: false,
-    createdAt: hoursAgo(9),
-  },
-  {
-    _id: "mock-4",
-    author: { _id: "mock-u4", name: "Priya Nair" },
-    text: "Does anyone else feel more anxious after scrolling through everyone's 'productive morning routine' posts? Trying to swap the comparison spiral for a 10-minute walk instead.",
-    likeCount: 27,
-    likedByMe: false,
-    createdAt: hoursAgo(20),
-  },
-];
+    createdAt: hoursAgo(post.hours),
+  }));
+
+const buildMockMembers = (community) => {
+  const names = [...new Set((community?.posts || []).map((post) => post.author))];
+  return names.slice(0, 4).map((name, index) => ({
+    _id: `mock-${community.id}-m${index}`,
+    name,
+    role: "member",
+  }));
+};
 
 function timeAgo(dateStr) {  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (seconds < 60) return "just now";
@@ -98,10 +95,13 @@ export default function CommunityDetail() {
   const { id } = useParams();
   const { user, token } = useAuth();
   const navigate = useNavigate();
-  const [community, setCommunity] = useState(null);
-  const [posts, setPosts] = useState(mockPosts);
-  const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const mock = communities.find((item) => item.id === id);
+  const [community, setCommunity] = useState(
+    mock ? mockToCommunity(mock) : null
+  );
+  const [posts, setPosts] = useState(mock ? buildMockPosts(mock) : []);
+  const [members, setMembers] = useState(mock ? buildMockMembers(mock) : []);
+  const [loading, setLoading] = useState(!mock);
   const [notFound, setNotFound] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [text, setText] = useState("");
@@ -114,7 +114,14 @@ export default function CommunityDetail() {
   const [copiedId, setCopiedId] = useState(null);
 
   const load = useCallback(async () => {
-    if (!token) return;
+    if (mock) {
+      setLoading(false);
+      return;
+    }
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const [communityRes, postsRes, membersRes] = await Promise.all([
@@ -143,7 +150,7 @@ export default function CommunityDetail() {
     } finally {
       setLoading(false);
     }
-  }, [id, token]);
+  }, [id, token, mock]);
 
   useEffect(() => {
     load();
@@ -187,6 +194,15 @@ export default function CommunityDetail() {
 
   const saveEdit = async (post) => {
     if (!editText.trim() || savingEdit) return;
+    if (post._id.startsWith("mock-")) {
+      setPosts((current) =>
+        current.map((item) =>
+          item._id === post._id ? { ...item, text: editText } : item
+        )
+      );
+      cancelEdit();
+      return;
+    }
     setSavingEdit(true);
     try {
       const res = await fetch(`${API_URL}/communities/posts/${post._id}`, {
@@ -216,6 +232,10 @@ export default function CommunityDetail() {
   const deletePost = async (post) => {
     setMenuOpenId(null);
     if (!window.confirm("Delete this post?")) return;
+    if (post._id.startsWith("mock-")) {
+      setPosts((current) => current.filter((item) => item._id !== post._id));
+      return;
+    }
     try {
       const res = await fetch(`${API_URL}/communities/posts/${post._id}`, {
         method: "DELETE",
@@ -231,6 +251,14 @@ export default function CommunityDetail() {
 
   const toggleJoin = async () => {
     if (!community) return;
+    if (community.isMock) {
+      setCommunity((current) => ({
+        ...current,
+        joinedByMe: !current.joinedByMe,
+        memberCount: current.memberCount + (current.joinedByMe ? -1 : 1),
+      }));
+      return;
+    }
     setToggling(true);
     try {
       const res = await fetch(
@@ -268,6 +296,19 @@ export default function CommunityDetail() {
   const submitPost = async (event) => {
     event.preventDefault();
     if (!text.trim() || posting) return;
+    if (community?.isMock) {
+      const newPost = {
+        _id: `mock-local-${Date.now()}`,
+        author: { _id: user?.id, name: user?.name || "You" },
+        text,
+        likeCount: 0,
+        likedByMe: false,
+        createdAt: new Date().toISOString(),
+      };
+      setPosts((current) => [newPost, ...current]);
+      setText("");
+      return;
+    }
     setPosting(true);
     try {
       const res = await fetch(`${API_URL}/communities/${id}/posts`, {
