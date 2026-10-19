@@ -429,7 +429,7 @@ export default function CommunityDetail() {
   }
 
   return (
-    <div className="space-y-5 lg:space-y-6">
+    <div className="space-y-4 lg:space-y-5">
       <div>
         <button
           onClick={() => navigate("/communities")}
@@ -440,8 +440,8 @@ export default function CommunityDetail() {
         </button>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
-        <div className="min-w-0 space-y-5 lg:space-y-6">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
+        <div className="min-w-0 space-y-4 lg:space-y-5">
           <Card className="relative overflow-hidden">
             <div className="relative flex min-h-[176px] flex-col items-start gap-4 overflow-hidden bg-gradient-to-br from-mint-soft via-lavender-soft to-blossom-soft px-5 py-6 sm:flex-row sm:items-center sm:gap-5 sm:px-7">
               <WorkspaceArt className="pointer-events-none absolute right-0 bottom-0 hidden h-full w-[48%] sm:block" />
@@ -549,7 +549,7 @@ export default function CommunityDetail() {
               </p>
             </Card>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {posts.map((post) => (
                 <Card key={post._id} className="p-5">
                   <div className="flex items-start justify-between gap-3">
@@ -674,7 +674,7 @@ export default function CommunityDetail() {
           )}
         </div>
 
-        <aside className="space-y-5">
+        <aside className="space-y-4">
           <Card className="relative p-4">
             <button
               aria-label="Community info"
