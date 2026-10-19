@@ -9,14 +9,14 @@ import { useAuth } from "../context/AuthContext";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const communityData = [
-  { id: "student-support", name: "Student Support Circle", icon: "graduationCap", members: "2.4k", description: "Exams, deadlines and everything in between. We get it.", category: "Support", accent: "bg-mint-soft text-mint-deep", joined: true },
+  { id: "student-support", name: "Student Support Circle", icon: "graduationCap", members: "2.4k", description: "Exams, deadlines and everything in between. We get it.", category: "Support", accent: "bg-mint-soft text-mint-deep", joined: false },
   { id: "anxiety-relief", name: "Anxiety Relief", icon: "wind", members: "1.8k", description: "Gentle practices and kind words for anxious days.", category: "Wellbeing", accent: "bg-lavender-soft text-lavender-deep", joined: false },
-  { id: "mindful-moments", name: "Mindful Moments", icon: "flower2", members: "3.1k", description: "Slow down, breathe and notice the small good things.", category: "Mindfulness", accent: "bg-blossom-soft text-blossom-deep", joined: true },
+  { id: "mindful-moments", name: "Mindful Moments", icon: "flower2", members: "3.1k", description: "Slow down, breathe and notice the small good things.", category: "Mindfulness", accent: "bg-blossom-soft text-blossom-deep", joined: false },
   { id: "new-parents", name: "New Parents United", icon: "usersRound", members: "1.2k", description: "Sleepless nights, big feelings and tiny victories.", category: "Support", accent: "bg-peach-soft text-peach-deep", joined: false },
   { id: "sleep-better", name: "Sleep Better Together", icon: "sparkles", members: "2.9k", description: "Wind-down rituals and stories to help you rest.", category: "Wellbeing", accent: "bg-sun-soft text-sun-deep", joined: false },
   { id: "breathwork-circle", name: "Breathwork Circle", icon: "wind", members: "860", description: "Five minutes a day to reset your nervous system.", category: "Mindfulness", accent: "bg-mint-soft text-mint-deep", joined: false },
   { id: "grief-and-loss", name: "Grief & Loss", icon: "cloudRain", members: "1.5k", description: "A soft place to sit with loss — at your own pace.", category: "Support", accent: "bg-lavender-soft text-lavender-deep", joined: false },
-  { id: "self-care-daily", name: "Self-Care Daily", icon: "smile", members: "4.2k", description: "Small habits, gentle reminders, one day at a time.", category: "Wellbeing", accent: "bg-blossom-soft text-blossom-deep", joined: true },
+  { id: "self-care-daily", name: "Self-Care Daily", icon: "smile", members: "4.2k", description: "Small habits, gentle reminders, one day at a time.", category: "Wellbeing", accent: "bg-blossom-soft text-blossom-deep", joined: false },
   { id: "meditation-pals", name: "Meditation Pals", icon: "compass", members: "2.1k", description: "Guided sits and shared quiet — together is easier.", category: "Mindfulness", accent: "bg-mint-soft text-mint-deep", joined: false },
 ];
 
