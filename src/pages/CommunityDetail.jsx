@@ -98,7 +98,7 @@ export default function CommunityDetail() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
   const [community, setCommunity] = useState(null);
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState(mockPosts);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -131,7 +131,7 @@ export default function CommunityDetail() {
       }
       if (postsRes.ok) {
         const data = await postsRes.json();
-        setPosts(data.posts?.length ? data.posts : mockPosts);
+        if (data.posts?.length) setPosts(data.posts);
       }
       if (membersRes.ok) {
         const data = await membersRes.json();
@@ -636,19 +636,19 @@ export default function CommunityDetail() {
         </div>
 
         <aside className="space-y-5">
-          <Card className="relative p-5">
+          <Card className="relative p-4">
             <button
               aria-label="Community info"
-              className="absolute top-4 right-4 rounded-lg p-1.5 text-muted transition-colors hover:bg-cream hover:text-ink"
+              className="absolute top-3 right-3 rounded-lg p-1 text-muted transition-colors hover:bg-cream hover:text-ink"
             >
-              <Sparkles size={15} />
+              <Sparkles size={13} />
             </button>
-            <h2 className="pr-8 text-[15px] font-bold text-ink">About</h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-muted">
+            <h2 className="pr-7 text-[13px] font-bold text-ink">About</h2>
+            <p className="mt-1.5 line-clamp-3 text-xs leading-relaxed text-muted">
               {community.description}
             </p>
-            <p className="mt-3 flex items-center gap-1.5 text-[12px] font-medium text-muted">
-              <Users size={13} />
+            <p className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium text-muted">
+              <Users size={12} />
               {community.memberCount}{" "}
               {community.memberCount === 1 ? "member" : "members"} ·{" "}
               {community.category}
