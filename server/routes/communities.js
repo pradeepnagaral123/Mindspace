@@ -142,6 +142,30 @@ router.delete("/:id/leave", auth, async (req, res) => {
   }
 });
 
+router.get("/:id/members", auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid community" });
+    }
+    const members = await CommunityMember.find({
+      community: req.params.id,
+    })
+      .sort({ createdAt: 1 })
+      .limit(6)
+      .populate("user", "name avatar");
+    res.json({
+      members: members.map((m) => ({
+        _id: m._id,
+        name: m.user?.name || "Member",
+        role: m.role,
+      })),
+    });
+  } catch (error) {
+    console.error("Get members error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 router.get("/:id/posts", auth, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {

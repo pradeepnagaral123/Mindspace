@@ -1,12 +1,44 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Check, Heart, Send, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpen,
+  Check,
+  ChevronRight,
+  Heart,
+  LifeBuoy,
+  MessageCircle,
+  MoreHorizontal,
+  NotebookPen,
+  Scale,
+  Send,
+  Share2,
+  ShieldCheck,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import Card from "../components/Card";
 import Icon from "../components/icons";
 import Avatar from "../components/Avatar";
+import sittingWomen from "../images/sitting_women.png";
 import { useAuth } from "../context/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
+
+const filterPills = ["All", "Questions", "Wins", "Venting", "Resources"];
+
+const rules = [
+  { icon: Heart, text: "Be kind — everyone here is doing their best." },
+  { icon: Scale, text: "No medical advice or diagnosis." },
+  { icon: ShieldCheck, text: "In a crisis, contact helplines immediately." },
+];
+
+const resourceRows = [
+  { icon: BookOpen, label: "Browse resources", to: "/resources" },
+  { icon: LifeBuoy, label: "Crisis helplines", to: "/helplines" },
+  { icon: ShieldCheck, label: "Safety centre", to: "/safety" },
+  { icon: NotebookPen, label: "Your journal", to: "/journal" },
+];
 
 function timeAgo(dateStr) {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -26,19 +58,22 @@ export default function CommunityDetail() {
   const navigate = useNavigate();
   const [community, setCommunity] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("All");
 
   const load = useCallback(async () => {
     if (!token) return;
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const [communityRes, postsRes] = await Promise.all([
+      const [communityRes, postsRes, membersRes] = await Promise.all([
         fetch(`${API_URL}/communities/${id}`, { headers }),
         fetch(`${API_URL}/communities/${id}/posts`, { headers }),
+        fetch(`${API_URL}/communities/${id}/members`, { headers }),
       ]);
       if (communityRes.status === 404) {
         setNotFound(true);
@@ -51,6 +86,10 @@ export default function CommunityDetail() {
       if (postsRes.ok) {
         const data = await postsRes.json();
         setPosts(data.posts || []);
+      }
+      if (membersRes.ok) {
+        const data = await membersRes.json();
+        setMembers(data.members || []);
       }
     } catch {
       // ignore
@@ -83,6 +122,14 @@ export default function CommunityDetail() {
           joinedByMe: data.joined,
           memberCount: data.memberCount,
         }));
+        const membersRes = await fetch(
+          `${API_URL}/communities/${id}/members`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (membersRes.ok) {
+          const membersData = await membersRes.json();
+          setMembers(membersData.members || []);
+        }
       }
     } catch {
       // ignore
@@ -194,139 +241,310 @@ export default function CommunityDetail() {
   }
 
   return (
-    <div className="space-y-6 lg:space-y-8">
-      <button
-        onClick={() => navigate("/communities")}
-        className="flex items-center gap-1.5 text-[13px] font-semibold text-muted transition-colors hover:text-ink"
-      >
-        <ArrowLeft size={15} />
-        All communities
-      </button>
+    <div className="space-y-5 lg:space-y-6">
+      <div>
+        <button
+          onClick={() => navigate("/communities")}
+          className="flex items-center gap-1.5 text-[13px] font-semibold text-muted transition-colors hover:text-ink"
+        >
+          <ArrowLeft size={15} />
+          All communities
+        </button>
+      </div>
 
-      <Card className="overflow-hidden">
-        <div className="relative h-28 bg-gradient-to-r from-mint via-lavender to-blossom">
-          <div className="absolute -top-12 -right-6 h-36 w-36 rounded-full bg-white/30 blur-2xl" />
-          <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white/45 to-transparent" />
-        </div>
-        <div className="relative z-10 px-5 pb-5 sm:px-6 sm:pb-6">
-          <div className="-mt-10 flex flex-wrap items-end justify-between gap-4">
-            <div className="flex items-end gap-4">
-              <span
-                className={`flex h-20 w-20 items-center justify-center rounded-2xl ring-4 ring-white ${community.accent}`}
-              >
-                <Icon name={community.icon} size={34} strokeWidth={2} />
-              </span>
-              <div className="pb-1">
-                <h1 className="font-display text-xl font-semibold text-ink sm:text-2xl">
-                  {community.name}
-                </h1>
-                <p className="mt-1 flex items-center gap-1 text-xs font-medium text-muted">
-                  <Users size={12} />
-                  {community.memberCount}{" "}
-                  {community.memberCount === 1 ? "member" : "members"}
-                  <span className="mx-1 text-line">·</span>
-                  <span className="rounded-full bg-cream px-2 py-0.5 text-[11px] font-semibold text-muted">
-                    {community.category}
-                  </span>
-                </p>
-              </div>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
+        <div className="min-w-0 space-y-5 lg:space-y-6">
+          <Card className="overflow-hidden">
+            <div className="relative h-24 bg-gradient-to-r from-mint via-lavender to-blossom sm:h-28">
+              <div className="absolute -top-12 -right-6 h-36 w-36 rounded-full bg-white/30 blur-2xl" />
+              <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white/45 to-transparent" />
             </div>
-            <button
-              onClick={toggleJoin}
-              disabled={toggling}
-              className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-colors disabled:opacity-60 ${
-                community.joinedByMe
-                  ? "border border-line bg-white text-ink hover:bg-cream"
-                  : "bg-navy text-white hover:bg-navy-2"
-              }`}
-            >
-              {community.joinedByMe && <Check size={14} />}
-              {community.joinedByMe ? "Leave group" : "Join group"}
-            </button>
-          </div>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted">
-            {community.description}
-          </p>
-        </div>
-      </Card>
-
-      {community.joinedByMe ? (
-        <Card className="p-5">
-          <form onSubmit={submitPost} className="flex items-start gap-3">
-            <Avatar name={user?.name || ""} size={40} gradient="blossom" />
-            <div className="flex-1">
-              <textarea
-                rows={3}
-                value={text}
-                onChange={(event) => setText(event.target.value)}
-                placeholder="Share something with the community..."
-                className="w-full resize-none rounded-xl border border-line bg-cream/50 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-mint-deep focus:ring-2 focus:ring-mint/40"
-              />
-              <div className="mt-2 flex justify-end">
+            <div className="relative z-10 px-5 pb-5 sm:px-6 sm:pb-6">
+              <div className="-mt-9 flex flex-wrap items-end justify-between gap-4">
+                <div className="flex min-w-0 items-end gap-4">
+                  <span
+                    className={`flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full ring-4 ring-white ${community.accent}`}
+                  >
+                    <Icon name={community.icon} size={30} strokeWidth={2} />
+                  </span>
+                  <div className="min-w-0 pb-1">
+                    <h1 className="truncate font-display text-xl font-semibold text-ink sm:text-2xl">
+                      {community.name}
+                    </h1>
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted">
+                      <span className="flex items-center gap-1">
+                        <Users size={12} />
+                        {community.memberCount}{" "}
+                        {community.memberCount === 1 ? "member" : "members"}
+                      </span>
+                      <span className="text-line">·</span>
+                      <span className="rounded-full bg-cream px-2 py-0.5 text-[11px] font-semibold text-muted">
+                        {community.category}
+                      </span>
+                    </p>
+                  </div>
+                </div>
                 <button
-                  type="submit"
-                  disabled={!text.trim() || posting}
-                  className="flex items-center gap-2 rounded-xl bg-navy px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-navy-2 disabled:opacity-50"
+                  onClick={toggleJoin}
+                  disabled={toggling}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-colors disabled:opacity-60 ${
+                    community.joinedByMe
+                      ? "border border-line bg-white text-ink hover:bg-cream"
+                      : "bg-navy text-white hover:bg-navy-2"
+                  }`}
                 >
-                  <Send size={13} />
-                  {posting ? "Posting..." : "Post"}
+                  {community.joinedByMe && <Check size={14} />}
+                  {community.joinedByMe ? "Leave group" : "Join group"}
                 </button>
               </div>
-            </div>
-          </form>
-        </Card>
-      ) : (
-        <Card className="border-mint/40 bg-gradient-to-br from-mint-soft/70 to-cream p-5 text-center">
-          <p className="text-sm font-semibold text-ink">Join to post</p>
-          <p className="mt-1 text-[13px] text-muted">
-            Only members can share and react in this community.
-          </p>
-        </Card>
-      )}
-
-      {posts.length === 0 ? (
-        <Card className="p-10 text-center">
-          <p className="text-sm font-semibold text-ink">No posts yet</p>
-          <p className="mt-1 text-[13px] text-muted">
-            Be the first to share something kind.
-          </p>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {posts.map((post) => (
-            <Card key={post._id} className="p-5">
-              <div className="flex items-center gap-3">
-                <Avatar name={post.author?.name || "Member"} size={36} gradient="lavender" />
-                <div>
-                  <p className="text-[13px] font-bold text-ink">
-                    {post.author?.name || "Member"}
-                  </p>
-                  <p className="text-[11px] text-muted">
-                    {timeAgo(post.createdAt)}
-                  </p>
+              <div className="mt-4 flex items-end justify-between gap-6">
+                <p className="max-w-2xl text-sm leading-relaxed text-muted">
+                  {community.description}
+                </p>
+                <div className="relative hidden h-20 w-36 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-mint-soft via-lavender-soft to-blossom-soft lg:block">
+                  <div className="absolute -top-6 -right-4 h-20 w-20 rounded-full bg-white/60 blur-xl" />
+                  <Sparkles
+                    size={30}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-lavender-deep/60"
+                  />
                 </div>
               </div>
-              <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap text-ink">
-                {post.text}
+            </div>
+          </Card>
+
+          {community.joinedByMe ? (
+            <Card className="p-5">
+              <form onSubmit={submitPost} className="flex items-start gap-3">
+                <Avatar name={user?.name || ""} size={40} gradient="blossom" />
+                <div className="min-w-0 flex-1">
+                  <textarea
+                    rows={3}
+                    value={text}
+                    onChange={(event) => setText(event.target.value)}
+                    placeholder="Share something with the community..."
+                    className="w-full resize-none rounded-xl border border-line bg-cream/50 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-mint-deep focus:ring-2 focus:ring-mint/40"
+                  />
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={!text.trim() || posting}
+                      className="flex items-center gap-2 rounded-xl bg-navy px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-navy-2 disabled:opacity-50"
+                    >
+                      <Send size={13} />
+                      {posting ? "Posting..." : "Post"}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </Card>
+          ) : (
+            <Card className="border-mint/40 bg-gradient-to-br from-mint-soft/70 to-cream p-5 text-center">
+              <p className="text-sm font-semibold text-ink">Join to post</p>
+              <p className="mt-1 text-[13px] text-muted">
+                Only members can share and react in this community.
               </p>
+            </Card>
+          )}
+
+          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {filterPills.map((pill) => (
               <button
-                onClick={() => toggleLike(post)}
-                className={`mt-3 flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-semibold transition-colors ${
-                  post.likedByMe
-                    ? "bg-blossom-soft text-blossom-deep"
-                    : "bg-cream text-muted hover:bg-blossom-soft/50 hover:text-blossom-deep"
+                key={pill}
+                onClick={() => setActiveFilter(pill)}
+                className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-colors ${
+                  activeFilter === pill
+                    ? "border-navy bg-navy text-white"
+                    : "border-line bg-white text-muted hover:bg-cream hover:text-ink"
                 }`}
               >
-                <Heart
-                  size={13}
-                  className={post.likedByMe ? "fill-current" : ""}
-                />
-                {post.likeCount}
+                {pill}
               </button>
+            ))}
+          </div>
+
+          {posts.length === 0 ? (
+            <Card className="p-10 text-center">
+              <p className="text-sm font-semibold text-ink">No posts yet</p>
+              <p className="mt-1 text-[13px] text-muted">
+                Be the first to share something kind.
+              </p>
             </Card>
-          ))}
+          ) : (
+            <div className="space-y-4">
+              {posts.map((post) => (
+                <Card key={post._id} className="p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Avatar
+                        name={post.author?.name || "Member"}
+                        size={36}
+                        gradient="lavender"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-[13px] font-bold text-ink">
+                          {post.author?.name || "Member"}
+                        </p>
+                        <p className="text-[11px] text-muted">
+                          {timeAgo(post.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      aria-label="Post options"
+                      className="rounded-lg p-1.5 text-muted transition-colors hover:bg-cream hover:text-ink"
+                    >
+                      <MoreHorizontal size={16} />
+                    </button>
+                  </div>
+
+                  <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap text-ink">
+                    {post.text}
+                  </p>
+
+                  <div className="mt-4 flex items-center justify-between border-t border-line/70 pt-3">
+                    <button
+                      onClick={() => toggleLike(post)}
+                      className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold transition-colors ${
+                        post.likedByMe
+                          ? "bg-blossom-soft text-blossom-deep"
+                          : "text-muted hover:bg-blossom-soft/50 hover:text-blossom-deep"
+                      }`}
+                    >
+                      <Heart
+                        size={14}
+                        className={post.likedByMe ? "fill-current" : ""}
+                      />
+                      {post.likeCount}
+                    </button>
+                    <button className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-muted transition-colors hover:bg-cream hover:text-ink">
+                      <MessageCircle size={14} />
+                      Comment
+                    </button>
+                    <button className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-muted transition-colors hover:bg-cream hover:text-ink">
+                      <Share2 size={14} />
+                      Share
+                    </button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+
+        <aside className="space-y-5">
+          <Card className="relative p-5">
+            <button
+              aria-label="Community info"
+              className="absolute top-4 right-4 rounded-lg p-1.5 text-muted transition-colors hover:bg-cream hover:text-ink"
+            >
+              <Sparkles size={15} />
+            </button>
+            <h2 className="pr-8 text-[15px] font-bold text-ink">About</h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-muted">
+              {community.description}
+            </p>
+            <p className="mt-3 flex items-center gap-1.5 text-[12px] font-medium text-muted">
+              <Users size={13} />
+              {community.memberCount}{" "}
+              {community.memberCount === 1 ? "member" : "members"} ·{" "}
+              {community.category}
+            </p>
+          </Card>
+
+          <Card className="p-5">
+            <h2 className="text-[15px] font-bold text-ink">Community rules</h2>
+            <div className="mt-3 space-y-3">
+              {rules.map((rule) => {
+                const RuleIcon = rule.icon;
+                return (
+                  <div key={rule.text} className="flex items-start gap-2.5">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-mint-soft text-mint-deep">
+                      <RuleIcon size={13} />
+                    </span>
+                    <p className="text-xs leading-relaxed text-muted">
+                      {rule.text}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          <Card className="p-5">
+            <h2 className="text-[15px] font-bold text-ink">Members</h2>
+            <div className="mt-3 divide-y divide-line/70">
+              {members.length === 0 ? (
+                <p className="py-3 text-xs text-muted">
+                  No members yet — be the first to join.
+                </p>
+              ) : (
+                members.map((member) => (
+                  <div key={member._id} className="flex items-center gap-2.5 py-2.5">
+                    <Avatar name={member.name} size={28} gradient="lavender" />
+                    <div className="min-w-0">
+                      <p className="truncate text-[12px] font-semibold text-ink">
+                        {member.name}
+                      </p>
+                      <p className="text-[10px] capitalize text-muted">
+                        {member.role}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+
+          <Card className="p-5">
+            <h2 className="text-[15px] font-bold text-ink">Resources</h2>
+            <div className="mt-2 divide-y divide-line/70">
+              {resourceRows.map((row) => {
+                const RowIcon = row.icon;
+                return (
+                  <button
+                    key={row.label}
+                    onClick={() => navigate(row.to)}
+                    className="flex w-full items-center gap-2.5 py-2.5 text-left transition-colors hover:text-mint-deep"
+                  >
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-cream text-muted">
+                      <RowIcon size={13} />
+                    </span>
+                    <span className="flex-1 text-[12px] font-semibold text-ink">
+                      {row.label}
+                    </span>
+                    <ChevronRight size={13} className="shrink-0 text-line" />
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+
+          <Card className="relative overflow-hidden border-mint/40 bg-gradient-to-br from-mint-soft/70 to-cream p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-[15px] font-bold text-ink">
+                  Find your people
+                </h2>
+                <p className="mt-1 text-xs leading-relaxed text-muted">
+                  Connect one-on-one with peers who get it.
+                </p>
+              </div>
+              <img
+                src={sittingWomen}
+                alt=""
+                className="h-16 w-16 shrink-0 rounded-xl object-cover"
+              />
+            </div>
+            <button
+              onClick={() => navigate("/find-a-peer")}
+              className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-navy px-3 py-2 text-[12px] font-semibold text-white transition-colors hover:bg-navy-2"
+            >
+              Find a peer
+              <ChevronRight size={13} />
+            </button>
+          </Card>
+        </aside>
+      </div>
     </div>
   );
 }
