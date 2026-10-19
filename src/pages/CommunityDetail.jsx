@@ -56,6 +56,7 @@ const mockToCommunity = (community) => ({
   category: community.category,
   icon: community.icon,
   accent: community.accent,
+  banner: community.banner,
   memberCount: community.memberCount,
   joinedByMe: false,
   isMock: true,
@@ -439,8 +440,11 @@ export default function CommunityDetail() {
           <Card className="relative overflow-hidden">
             <div className="relative flex min-h-[176px] flex-col items-start gap-4 overflow-hidden bg-gradient-to-br from-mint-soft via-lavender-soft to-blossom-soft px-5 py-6 sm:flex-row sm:items-center sm:gap-5 sm:px-7">
               <img
-                src={bannerImg}
+                src={community.banner || bannerImg}
                 alt=""
+                onError={(event) => {
+                  event.currentTarget.src = bannerImg;
+                }}
                 className="pointer-events-none absolute right-0 bottom-0 hidden h-full w-[52%] object-cover [mask-image:linear-gradient(to_right,transparent_0%,black_45%)] sm:block"
               />
               <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[52%] bg-gradient-to-r from-white/0 via-white/5 to-white/15 sm:block" />
