@@ -1,0 +1,254 @@
+import express from "express";
+import mongoose from "mongoose";
+import Community from "../models/Community.js";
+import CommunityMember from "../models/CommunityMember.js";
+import Post from "../models/Post.js";
+import auth from "../middleware/auth.js";
+import { notify } from "../utils/notify.js";
+
+const router = express.Router();
+
+const SEED_COMMUNITY = {
+  name: "Student Support Circle",
+  description:
+    "Exams, deadlines and everything in between. We get it.",
+  category: "Support",
+  icon: "graduationCap",
+  accent: "bg-mint-soft text-mint-deep",
+};
+
+async function ensureSeed() {
+  const count = await Community.estimatedDocumentCount();
+  if (count === 0) {
+    await Community.create(SEED_COMMUNITY);
+  }
+}
+
+const shapeCommunity = (community, memberCount, joinedByMe) => ({
+  _id: community._id,
+  name: community.name,
+  description: community.description,
+  category: community.category,
+  icon: community.icon,
+  accent: community.accent,
+  memberCount,
+  joinedByMe,
+});
+
+router.get("/", auth, async (req, res) => {
+  try {
+    await ensureSeed();
+    const communities = await Community.find().sort({ createdAt: 1 });
+    const myMemberships = await CommunityMember.find({
+      user: req.user._id,
+    }).select("community");
+    const joinedIds = new Set(
+      myMemberships.map((m) => m.community.toString())
+    );
+
+    const counts = await CommunityMember.aggregate([
+      { $group: { _id: "$community", count: { $sum: 1 } } },
+    ]);
+    const countMap = new Map(
+      counts.map((c) => [c._id.toString(), c.count])
+    );
+
+    res.json({
+      communities: communities.map((c) =>
+        shapeCommunity(
+          c,
+          countMap.get(c._id.toString()) || 0,
+          joinedIds.has(c._id.toString())
+        )
+      ),
+    });
+  } catch (error) {
+    console.error("Get communities error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/:id", auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid community" });
+    }
+    const community = await Community.findById(req.params.id);
+    if (!community) {
+      return res.status(404).json({ message: "Community not found" });
+    }
+    const [memberCount, membership] = await Promise.all([
+      CommunityMember.countDocuments({ community: community._id }),
+      CommunityMember.findOne({
+        community: community._id,
+        user: req.user._id,
+      }),
+    ]);
+    res.json({
+      community: shapeCommunity(community, memberCount, Boolean(membership)),
+    });
+  } catch (error) {
+    console.error("Get community error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/:id/join", auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid community" });
+    }
+    const community = await Community.findById(req.params.id);
+    if (!community) {
+      return res.status(404).json({ message: "Community not found" });
+    }
+    const existing = await CommunityMember.findOne({
+      community: community._id,
+      user: req.user._id,
+    });
+    if (existing) {
+      return res.json({ ok: true, joined: true });
+    }
+    await CommunityMember.create({
+      community: community._id,
+      user: req.user._id,
+    });
+    const memberCount = await CommunityMember.countDocuments({
+      community: community._id,
+    });
+    res.status(201).json({ ok: true, joined: true, memberCount });
+  } catch (error) {
+    console.error("Join community error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.delete("/:id/leave", auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid community" });
+    }
+    await CommunityMember.deleteOne({
+      community: req.params.id,
+      user: req.user._id,
+    });
+    const memberCount = await CommunityMember.countDocuments({
+      community: req.params.id,
+    });
+    res.json({ ok: true, joined: false, memberCount });
+  } catch (error) {
+    console.error("Leave community error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/:id/posts", auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid community" });
+    }
+    const posts = await Post.find({ community: req.params.id })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .populate("author", "name avatar");
+
+    res.json({
+      posts: posts.map((post) => ({
+        _id: post._id,
+        text: post.text,
+        author: post.author
+          ? { _id: post.author._id, name: post.author.name }
+          : null,
+        likeCount: post.likes.length,
+        likedByMe: post.likes.some(
+          (id) => id.toString() === req.user._id.toString()
+        ),
+        createdAt: post.createdAt,
+      })),
+    });
+  } catch (error) {
+    console.error("Get posts error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/:id/posts", auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid community" });
+    }
+    const { text } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ message: "Post text is required" });
+    }
+    const membership = await CommunityMember.findOne({
+      community: req.params.id,
+      user: req.user._id,
+    });
+    if (!membership) {
+      return res
+        .status(403)
+        .json({ message: "Join the community to post" });
+    }
+
+    const post = await Post.create({
+      community: req.params.id,
+      author: req.user._id,
+      text: text.trim().slice(0, 2000),
+    });
+
+    const members = await CommunityMember.find({
+      community: req.params.id,
+      user: { $ne: req.user._id },
+    }).select("user");
+    members.forEach((member) => {
+      notify({
+        user: member.user,
+        type: "system",
+        title: "New community post",
+        body: `${req.user.name} posted in the community.`,
+        link: `/communities/${req.params.id}`,
+      });
+    });
+
+    res.status(201).json({
+      post: {
+        _id: post._id,
+        text: post.text,
+        author: { _id: req.user._id, name: req.user.name },
+        likeCount: 0,
+        likedByMe: false,
+        createdAt: post.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("Create post error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/posts/:id/like", auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid post" });
+    }
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    const userId = req.user._id.toString();
+    const liked = post.likes.some((id) => id.toString() === userId);
+    if (liked) {
+      post.likes = post.likes.filter((id) => id.toString() !== userId);
+    } else {
+      post.likes.push(req.user._id);
+    }
+    await post.save();
+    res.json({ liked: !liked, likeCount: post.likes.length });
+  } catch (error) {
+    console.error("Like post error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+export default router;

@@ -3,6 +3,7 @@ import { useAuth } from "./context/AuthContext.jsx";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Communities from "./pages/Communities";
+import CommunityDetail from "./pages/CommunityDetail";
 import FindAPeer from "./pages/FindAPeer";
 import Messages from "./pages/Messages";
 import CheckIn from "./pages/CheckIn";
@@ -15,7 +16,6 @@ import Journal from "./pages/Journal";
 import CheckInHistory from "./pages/CheckInHistory";
 import Helplines from "./pages/Helplines";
 import Profile from "./pages/Profile";
-import PlaceholderPage from "./pages/PlaceholderPage";
 import AuthCallback from "./pages/AuthCallback";
 import VerifyEmail from "./pages/VerifyEmail";
 import AppShell from "./components/AppShell";
@@ -57,15 +57,7 @@ function App() {
           <Route path="/check-in-history" element={<CheckInHistory />} />
           <Route path="/helplines" element={<Helplines />} />
           <Route path="/profile" element={<Profile />} />
-          <Route
-            path="/communities/:id"
-            element={
-              <PlaceholderPage
-                title="Community"
-                description="This community space is being prepared with care. It'll be ready soon."
-              />
-            }
-          />
+          <Route path="/communities/:id" element={<CommunityDetail />} />
         </Route>
       </Route>
 
