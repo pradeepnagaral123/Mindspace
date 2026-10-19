@@ -25,6 +25,7 @@ import Card from "../components/Card";
 import Icon from "../components/icons";
 import Avatar from "../components/Avatar";
 import sittingWomen from "../images/sitting_women.png";
+import bannerImg from "../images/community-banner.jpg";
 import { useAuth } from "../context/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -81,54 +82,6 @@ const mockPosts = [
     createdAt: hoursAgo(20),
   },
 ];
-
-function WorkspaceArt({ className = "" }) {
-  return (
-    <svg
-      viewBox="0 0 340 180"
-      className={className}
-      fill="none"
-      aria-hidden="true"
-      preserveAspectRatio="xMaxYMax meet"
-    >
-      <rect x="222" y="16" width="100" height="114" rx="12" fill="#ffffff" fillOpacity="0.45" />
-      <rect
-        x="222"
-        y="16"
-        width="100"
-        height="114"
-        rx="12"
-        stroke="#7c5cd0"
-        strokeOpacity="0.14"
-        strokeWidth="2"
-      />
-      <path d="M272 16v114" stroke="#7c5cd0" strokeOpacity="0.12" strokeWidth="2" />
-      <path d="M222 73h100" stroke="#7c5cd0" strokeOpacity="0.12" strokeWidth="2" />
-      <circle cx="249" cy="44" r="11" fill="#f4d66d" fillOpacity="0.45" />
-      <path
-        d="M158 156c-18-8-29-28-24-48 18 2 33 16 37 35"
-        fill="#2fae7f"
-        fillOpacity="0.16"
-      />
-      <path
-        d="M158 156c15-11 22-32 13-50-15 7-26 22-26 39"
-        fill="#2fae7f"
-        fillOpacity="0.24"
-      />
-      <path
-        d="M158 156v-36"
-        stroke="#2fae7f"
-        strokeOpacity="0.35"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-      <path d="M138 154h40l-5 26h-30l-5-26Z" fill="#dc7a49" fillOpacity="0.26" />
-      <rect x="250" y="144" width="66" height="10" rx="3" fill="#ff9dbb" fillOpacity="0.38" />
-      <rect x="256" y="156" width="60" height="10" rx="3" fill="#c7a8ff" fillOpacity="0.38" />
-      <rect x="262" y="168" width="54" height="10" rx="3" fill="#a5f0d2" fillOpacity="0.5" />
-    </svg>
-  );
-}
 
 function timeAgo(dateStr) {  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (seconds < 60) return "just now";
@@ -444,8 +397,12 @@ export default function CommunityDetail() {
         <div className="min-w-0 space-y-4 lg:space-y-5">
           <Card className="relative overflow-hidden">
             <div className="relative flex min-h-[176px] flex-col items-start gap-4 overflow-hidden bg-gradient-to-br from-mint-soft via-lavender-soft to-blossom-soft px-5 py-6 sm:flex-row sm:items-center sm:gap-5 sm:px-7">
-              <WorkspaceArt className="pointer-events-none absolute right-0 bottom-0 hidden h-full w-[48%] sm:block" />
-              <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] bg-gradient-to-r from-white/0 via-white/10 to-white/40 sm:block" />
+              <img
+                src={bannerImg}
+                alt=""
+                className="pointer-events-none absolute right-0 bottom-0 hidden h-full w-[52%] object-cover [mask-image:linear-gradient(to_right,transparent_0%,black_45%)] sm:block"
+              />
+              <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[52%] bg-gradient-to-r from-white/0 via-white/5 to-white/15 sm:block" />
 
               <span
                 className={`relative z-10 flex h-20 w-20 shrink-0 items-center justify-center rounded-full shadow-lg ring-4 ring-white sm:h-24 sm:w-24 ${community.accent}`}

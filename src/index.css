@@ -22,7 +22,7 @@
   --color-sun-soft: #fdf5dd;
   --color-cream: #faf9f5;
   --color-ink: #17212b;
-  --color-muted: #6d767f;
+  --color-muted: #17212b;
   --color-line: #e9eaee;
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Playfair Display", Georgia, serif;
@@ -38,7 +38,7 @@
   --yellow: #f4d66d;
   --cream: #faf9f5;
   --text: #17212b;
-  --muted: #707981;
+  --muted: #17212b;
   --border: #e7e8e6;
 }
 
@@ -584,7 +584,7 @@ a {
   font-family: "Playfair Display", serif;
   font-size: 21px;
   line-height: 1.4;
-  color: #44505c;
+  color: #17212b;
   margin: 0;
 }
 
@@ -880,7 +880,7 @@ a {
 
 .matching-copy > p:not(.section-label) {
   max-width: 410px;
-  color: #aebbc4;
+  color: #17212b;
   font-size: 12px;
   line-height: 1.6;
   margin: 20px 0;
@@ -943,7 +943,7 @@ a {
 
 .tags span {
   background: #34495a;
-  color: #d8e0e5;
+  color: #17212b;
   padding: 5px 8px;
   border-radius: 6px;
   font-size: 9px;
@@ -1211,7 +1211,7 @@ footer {
 
 .socials {
   margin-top: 25px;
-  color: #8998a3;
+  color: #17212b;
   font-size: 15px;
 }
 
@@ -1271,7 +1271,7 @@ footer {
   grid-column: 1 / -1;
   border-top: 1px solid #21394a;
   padding-top: 25px;
-  color: #6f808b;
+  color: #17212b;
   font-size: 11px;
 }
 
