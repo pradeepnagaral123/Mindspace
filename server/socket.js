@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "./models/User.js";
 import Connection from "./models/Connection.js";
 import Message from "./models/Message.js";
+import { notify } from "./utils/notify.js";
 
 const onlineUsers = new Map();
 
@@ -104,6 +105,15 @@ export function initSocket(httpServer, corsOrigin) {
             : connection.user.toString();
 
         io.to(`user:${userId}`).to(`user:${peerId}`).emit("message:new", payload);
+
+        notify({
+          user: peerId,
+          type: "message",
+          title: "New message",
+          body: `${socket.user.name} sent you a message.`,
+          link: "/messages",
+        });
+
         ack?.({ ok: true, message: payload });
       } catch (error) {
         console.error("message:send error:", error.message);

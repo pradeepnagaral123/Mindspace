@@ -1,5 +1,6 @@
-import { Bell, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import Avatar from "./Avatar";
+import NotificationBell from "./NotificationBell";
 import { useAuth } from "../context/AuthContext";
 
 export default function Topbar({ onMenu }) {
@@ -16,12 +17,7 @@ export default function Topbar({ onMenu }) {
       </button>
 
       <div className="relative ml-auto flex items-center gap-2 sm:gap-3">
-        <button
-          className="relative rounded-xl border border-line bg-white p-2.5 text-ink shadow-sm transition-colors hover:bg-cream"
-          aria-label="Notifications"
-        >
-          <Bell size={19} />
-        </button>
+        <NotificationBell />
 
         <div className="flex items-center gap-2.5 rounded-xl border border-line bg-white py-1.5 pr-3 pl-1.5 shadow-sm">
           <Avatar name={user.name} size={32} gradient="blossom" />

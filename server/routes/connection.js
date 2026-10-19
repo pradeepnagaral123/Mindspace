@@ -4,6 +4,7 @@ import Connection from "../models/Connection.js";
 import User from "../models/User.js";
 import auth from "../middleware/auth.js";
 import { getIO } from "../socket.js";
+import { notify } from "../utils/notify.js";
 
 const router = express.Router();
 
@@ -95,6 +96,14 @@ router.post("/", auth, async (req, res) => {
         },
       });
     }
+
+    notify({
+      user: peerId,
+      type: "connection",
+      title: "New connection",
+      body: `${req.user.name} connected with you.`,
+      link: "/find-a-peer",
+    });
 
     res.status(201).json({ connection });
   } catch (error) {

@@ -10,6 +10,7 @@ import moodRoutes from "./routes/mood.js";
 import connectionRoutes from "./routes/connection.js";
 import chatRoutes from "./routes/chat.js";
 import messageRoutes from "./routes/messages.js";
+import notificationRoutes from "./routes/notifications.js";
 import { initSocket } from "./socket.js";
 
 const app = express();
@@ -31,6 +32,7 @@ app.use("/api/moods", moodRoutes);
 app.use("/api/connections", connectionRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "MindSpace API is running" });
