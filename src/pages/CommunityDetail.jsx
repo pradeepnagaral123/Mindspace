@@ -6,6 +6,7 @@ import {
   Check,
   ChevronRight,
   Copy,
+  Globe,
   Heart,
   LifeBuoy,
   MessageCircle,
@@ -81,8 +82,55 @@ const mockPosts = [
   },
 ];
 
-function timeAgo(dateStr) {
-  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+function WorkspaceArt({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 340 180"
+      className={className}
+      fill="none"
+      aria-hidden="true"
+      preserveAspectRatio="xMaxYMax meet"
+    >
+      <rect x="222" y="16" width="100" height="114" rx="12" fill="#ffffff" fillOpacity="0.45" />
+      <rect
+        x="222"
+        y="16"
+        width="100"
+        height="114"
+        rx="12"
+        stroke="#7c5cd0"
+        strokeOpacity="0.14"
+        strokeWidth="2"
+      />
+      <path d="M272 16v114" stroke="#7c5cd0" strokeOpacity="0.12" strokeWidth="2" />
+      <path d="M222 73h100" stroke="#7c5cd0" strokeOpacity="0.12" strokeWidth="2" />
+      <circle cx="249" cy="44" r="11" fill="#f4d66d" fillOpacity="0.45" />
+      <path
+        d="M158 156c-18-8-29-28-24-48 18 2 33 16 37 35"
+        fill="#2fae7f"
+        fillOpacity="0.16"
+      />
+      <path
+        d="M158 156c15-11 22-32 13-50-15 7-26 22-26 39"
+        fill="#2fae7f"
+        fillOpacity="0.24"
+      />
+      <path
+        d="M158 156v-36"
+        stroke="#2fae7f"
+        strokeOpacity="0.35"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <path d="M138 154h40l-5 26h-30l-5-26Z" fill="#dc7a49" fillOpacity="0.26" />
+      <rect x="250" y="144" width="66" height="10" rx="3" fill="#ff9dbb" fillOpacity="0.38" />
+      <rect x="256" y="156" width="60" height="10" rx="3" fill="#c7a8ff" fillOpacity="0.38" />
+      <rect x="262" y="168" width="54" height="10" rx="3" fill="#a5f0d2" fillOpacity="0.5" />
+    </svg>
+  );
+}
+
+function timeAgo(dateStr) {  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
@@ -394,61 +442,52 @@ export default function CommunityDetail() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-8">
         <div className="min-w-0 space-y-5 lg:space-y-6">
-          <Card className="overflow-hidden">
-            <div className="relative h-24 bg-gradient-to-r from-mint via-lavender to-blossom sm:h-28">
-              <div className="absolute -top-12 -right-6 h-36 w-36 rounded-full bg-white/30 blur-2xl" />
-              <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white/45 to-transparent" />
-            </div>
-            <div className="relative z-10 px-5 pb-5 sm:px-6 sm:pb-6">
-              <div className="-mt-9 flex flex-wrap items-end justify-between gap-4">
-                <div className="flex min-w-0 items-end gap-4">
-                  <span
-                    className={`flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full ring-4 ring-white ${community.accent}`}
-                  >
-                    <Icon name={community.icon} size={30} strokeWidth={2} />
-                  </span>
-                  <div className="min-w-0 pb-1">
-                    <h1 className="truncate font-display text-xl font-semibold text-ink sm:text-2xl">
-                      {community.name}
-                    </h1>
-                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted">
-                      <span className="flex items-center gap-1">
-                        <Users size={12} />
-                        {community.memberCount}{" "}
-                        {community.memberCount === 1 ? "member" : "members"}
-                      </span>
-                      <span className="text-line">·</span>
-                      <span className="rounded-full bg-cream px-2 py-0.5 text-[11px] font-semibold text-muted">
-                        {community.category}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={toggleJoin}
-                  disabled={toggling}
-                  className={`flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-colors disabled:opacity-60 ${
-                    community.joinedByMe
-                      ? "border border-line bg-white text-ink hover:bg-cream"
-                      : "bg-navy text-white hover:bg-navy-2"
-                  }`}
-                >
-                  {community.joinedByMe && <Check size={14} />}
-                  {community.joinedByMe ? "Leave group" : "Join group"}
-                </button>
-              </div>
-              <div className="mt-4 flex items-end justify-between gap-6">
-                <p className="max-w-2xl text-sm leading-relaxed text-muted">
+          <Card className="relative overflow-hidden">
+            <div className="relative flex min-h-[176px] flex-col items-start gap-4 overflow-hidden bg-gradient-to-br from-mint-soft via-lavender-soft to-blossom-soft px-5 py-6 sm:flex-row sm:items-center sm:gap-5 sm:px-7">
+              <WorkspaceArt className="pointer-events-none absolute right-0 bottom-0 hidden h-full w-[48%] sm:block" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] bg-gradient-to-r from-white/0 via-white/10 to-white/40 sm:block" />
+
+              <span
+                className={`relative z-10 flex h-20 w-20 shrink-0 items-center justify-center rounded-full shadow-lg ring-4 ring-white sm:h-24 sm:w-24 ${community.accent}`}
+              >
+                <Icon name={community.icon} size={34} strokeWidth={2} />
+              </span>
+
+              <div className="relative z-10 min-w-0 flex-1 sm:pr-10">
+                <h1 className="truncate font-display text-xl font-semibold text-ink sm:text-2xl">
+                  {community.name}
+                </h1>
+                <p className="mt-1 line-clamp-1 max-w-md text-xs text-muted sm:text-[13px]">
                   {community.description}
                 </p>
-                <div className="relative hidden h-20 w-36 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-mint-soft via-lavender-soft to-blossom-soft lg:block">
-                  <div className="absolute -top-6 -right-4 h-20 w-20 rounded-full bg-white/60 blur-xl" />
-                  <Sparkles
-                    size={30}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-lavender-deep/60"
-                  />
+                <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-medium text-muted sm:text-xs">
+                  <span className="flex items-center gap-1">
+                    <Users size={12} />
+                    {community.memberCount}{" "}
+                    {community.memberCount === 1 ? "member" : "members"}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Globe size={12} />
+                    Public group
+                  </span>
+                  <span className="rounded-full bg-white/60 px-2 py-0.5 text-[10px] font-semibold text-muted">
+                    {community.category}
+                  </span>
                 </div>
               </div>
+
+              <button
+                onClick={toggleJoin}
+                disabled={toggling}
+                className={`relative z-10 flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-colors disabled:opacity-60 sm:ml-auto ${
+                  community.joinedByMe
+                    ? "border border-white/70 bg-white/80 text-ink backdrop-blur-sm hover:bg-white"
+                    : "bg-navy text-white hover:bg-navy-2"
+                }`}
+              >
+                {community.joinedByMe && <Check size={14} />}
+                {community.joinedByMe ? "Leave group" : "Join group"}
+              </button>
             </div>
           </Card>
 
