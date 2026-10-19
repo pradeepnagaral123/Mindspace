@@ -5,16 +5,19 @@ import {
   BookOpen,
   Check,
   ChevronRight,
+  Copy,
   Heart,
   LifeBuoy,
   MessageCircle,
   MoreHorizontal,
   NotebookPen,
+  Pencil,
   Scale,
   Send,
   Share2,
   ShieldCheck,
   Sparkles,
+  Trash2,
   Users,
 } from "lucide-react";
 import Card from "../components/Card";
@@ -38,6 +41,44 @@ const resourceRows = [
   { icon: LifeBuoy, label: "Crisis helplines", to: "/helplines" },
   { icon: ShieldCheck, label: "Safety centre", to: "/safety" },
   { icon: NotebookPen, label: "Your journal", to: "/journal" },
+];
+
+const hoursAgo = (hours) =>
+  new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+
+const mockPosts = [
+  {
+    _id: "mock-1",
+    author: { _id: "mock-u1", name: "Aarav Menon" },
+    text: "Finals week is next week and I keep freezing every time I open my notes. Does anyone have a routine that actually helps with exam anxiety? Even small things would help.",
+    likeCount: 18,
+    likedByMe: false,
+    createdAt: hoursAgo(2),
+  },
+  {
+    _id: "mock-2",
+    author: { _id: "mock-u2", name: "Mira Kapoor" },
+    text: "Small win: I finally went to the library for two hours without checking my phone every five minutes. Two hours felt like a whole day, but I'll take it. 🌱",
+    likeCount: 34,
+    likedByMe: true,
+    createdAt: hoursAgo(5),
+  },
+  {
+    _id: "mock-3",
+    author: { _id: "mock-u3", name: "Sam Iyer" },
+    text: "Reminder that a 60% semester is still a semester passed. I used to think anything below perfect was a failure, and I'm slowly learning that rest is part of the work too.",
+    likeCount: 42,
+    likedByMe: false,
+    createdAt: hoursAgo(9),
+  },
+  {
+    _id: "mock-4",
+    author: { _id: "mock-u4", name: "Priya Nair" },
+    text: "Does anyone else feel more anxious after scrolling through everyone's 'productive morning routine' posts? Trying to swap the comparison spiral for a 10-minute walk instead.",
+    likeCount: 27,
+    likedByMe: false,
+    createdAt: hoursAgo(20),
+  },
 ];
 
 function timeAgo(dateStr) {
@@ -65,6 +106,11 @@ export default function CommunityDetail() {
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
+  const [menuOpenId, setMenuOpenId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
 
   const load = useCallback(async () => {
     if (!token) return;
@@ -85,7 +131,7 @@ export default function CommunityDetail() {
       }
       if (postsRes.ok) {
         const data = await postsRes.json();
-        setPosts(data.posts || []);
+        setPosts(data.posts?.length ? data.posts : mockPosts);
       }
       if (membersRes.ok) {
         const data = await membersRes.json();
@@ -101,6 +147,86 @@ export default function CommunityDetail() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!menuOpenId) return;
+    const onPointerDown = (event) => {
+      if (!event.target.closest("[data-post-menu]")) {
+        setMenuOpenId(null);
+      }
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [menuOpenId]);
+
+  const isOwnPost = (post) =>
+    Boolean(user?.id && post.author?._id === user.id);
+
+  const copyPost = async (post) => {
+    setMenuOpenId(null);
+    try {
+      await navigator.clipboard.writeText(post.text);
+      setCopiedId(post._id);
+      setTimeout(() => setCopiedId(null), 1500);
+    } catch {
+      // ignore
+    }
+  };
+
+  const startEdit = (post) => {
+    setMenuOpenId(null);
+    setEditingId(post._id);
+    setEditText(post.text);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditText("");
+  };
+
+  const saveEdit = async (post) => {
+    if (!editText.trim() || savingEdit) return;
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`${API_URL}/communities/posts/${post._id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text: editText }),
+      });
+      const data = res.ok ? await res.json() : null;
+      if (data) {
+        setPosts((current) =>
+          current.map((item) =>
+            item._id === post._id ? { ...item, text: data.post.text } : item
+          )
+        );
+        cancelEdit();
+      }
+    } catch {
+      // ignore
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const deletePost = async (post) => {
+    setMenuOpenId(null);
+    if (!window.confirm("Delete this post?")) return;
+    try {
+      const res = await fetch(`${API_URL}/communities/posts/${post._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setPosts((current) => current.filter((item) => item._id !== post._id));
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const toggleJoin = async () => {
     if (!community) return;
@@ -164,6 +290,20 @@ export default function CommunityDetail() {
   };
 
   const toggleLike = async (post) => {
+    if (post._id.startsWith("mock-")) {
+      setPosts((current) =>
+        current.map((item) =>
+          item._id === post._id
+            ? {
+                ...item,
+                likedByMe: !item.likedByMe,
+                likeCount: item.likeCount + (item.likedByMe ? -1 : 1),
+              }
+            : item
+        )
+      );
+      return;
+    }
     const previous = post.likedByMe;
     setPosts((current) =>
       current.map((item) =>
@@ -389,17 +529,81 @@ export default function CommunityDetail() {
                         </p>
                       </div>
                     </div>
-                    <button
-                      aria-label="Post options"
-                      className="rounded-lg p-1.5 text-muted transition-colors hover:bg-cream hover:text-ink"
-                    >
-                      <MoreHorizontal size={16} />
-                    </button>
+                    <div className="relative" data-post-menu>
+                      <button
+                        onClick={() =>
+                          setMenuOpenId((current) =>
+                            current === post._id ? null : post._id
+                          )
+                        }
+                        aria-label="Post options"
+                        className="rounded-lg p-1.5 text-muted transition-colors hover:bg-cream hover:text-ink"
+                      >
+                        <MoreHorizontal size={16} />
+                      </button>
+                      {menuOpenId === post._id && (
+                        <div className="absolute top-full right-0 z-20 mt-1 w-36 overflow-hidden rounded-xl border border-line bg-white py-1 shadow-[0_8px_24px_rgba(7,21,34,0.14)]">
+                          <button
+                            onClick={() => copyPost(post)}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-medium text-ink transition-colors hover:bg-cream"
+                          >
+                            <Copy size={13} />
+                            {copiedId === post._id ? "Copied!" : "Copy"}
+                          </button>
+                          {isOwnPost(post) && (
+                            <>
+                              <button
+                                onClick={() => startEdit(post)}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-medium text-ink transition-colors hover:bg-cream"
+                              >
+                                <Pencil size={13} />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => deletePost(post)}
+                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-medium text-blossom-deep transition-colors hover:bg-blossom-soft"
+                              >
+                                <Trash2 size={13} />
+                                Delete
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap text-ink">
-                    {post.text}
-                  </p>
+                  {editingId === post._id ? (
+                    <div className="mt-3">
+                      <textarea
+                        rows={3}
+                        value={editText}
+                        onChange={(event) => setEditText(event.target.value)}
+                        autoFocus
+                        className="w-full resize-none rounded-xl border border-line bg-cream/50 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-mint-deep focus:ring-2 focus:ring-mint/40"
+                      />
+                      <div className="mt-2 flex justify-end gap-2">
+                        <button
+                          onClick={cancelEdit}
+                          className="rounded-lg border border-line bg-white px-3 py-1.5 text-[12px] font-semibold text-ink transition-colors hover:bg-cream"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => saveEdit(post)}
+                          disabled={!editText.trim() || savingEdit}
+                          className="flex items-center gap-1.5 rounded-lg bg-navy px-3 py-1.5 text-[12px] font-semibold text-white transition-colors hover:bg-navy-2 disabled:opacity-50"
+                        >
+                          <Check size={12} />
+                          {savingEdit ? "Saving..." : "Save"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap text-ink">
+                      {post.text}
+                    </p>
+                  )}
 
                   <div className="mt-4 flex items-center justify-between border-t border-line/70 pt-3">
                     <button

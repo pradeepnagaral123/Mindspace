@@ -275,4 +275,49 @@ router.post("/posts/:id/like", auth, async (req, res) => {
   }
 });
 
+router.patch("/posts/:id", auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid post" });
+    }
+    const { text } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ message: "Post text is required" });
+    }
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    if (post.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You can only edit your own posts" });
+    }
+    post.text = text.trim().slice(0, 2000);
+    await post.save();
+    res.json({ post: { _id: post._id, text: post.text } });
+  } catch (error) {
+    console.error("Edit post error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.delete("/posts/:id", auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid post" });
+    }
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    if (post.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You can only delete your own posts" });
+    }
+    await post.deleteOne();
+    res.json({ ok: true });
+  } catch (error) {
+    console.error("Delete post error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default router;
