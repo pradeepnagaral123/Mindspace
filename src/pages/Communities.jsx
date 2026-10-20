@@ -174,9 +174,15 @@ export default function Communities() {
                 key={community.id}
                 className="group flex flex-col p-5 transition-shadow hover:shadow-md"
               >
+                <span
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl ${community.accent}`}
+                >
+                  <Icon name={community.icon} size={22} strokeWidth={2} />
+                </span>
+
                 <button
                   onClick={() => openCommunity(community)}
-                  className="text-left text-base font-extrabold text-ink group-hover:text-mint-deep"
+                  className="mt-4 text-left text-base font-extrabold text-ink group-hover:text-mint-deep"
                 >
                   {community.name}
                 </button>
@@ -188,7 +194,7 @@ export default function Communities() {
                   {community.description}
                 </p>
 
-                <div className="mt-4 flex items-center gap-2">
+                <div className="mt-4 flex items-center">
                   <button
                     onClick={() => toggleJoin(community)}
                     disabled={togglingId === community.id}
@@ -200,12 +206,6 @@ export default function Communities() {
                   >
                     {joinedStatus && <Check size={14} />}
                     {joinedStatus ? "Joined" : "Join"}
-                  </button>
-                  <button
-                    onClick={() => openCommunity(community)}
-                    className="rounded-xl border border-line bg-white px-3 py-2 text-[13px] font-semibold text-ink transition-colors hover:bg-cream"
-                  >
-                    View
                   </button>
                 </div>
               </Card>
