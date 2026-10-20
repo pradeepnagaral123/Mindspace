@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Plus, Search, Users } from "lucide-react";
+import { Check, Plus, Search, Trash2, Users } from "lucide-react";
 import Card from "../components/Card";
 import Icon from "../components/icons";
 import CreateCommunityModal from "../components/CreateCommunityModal";
@@ -9,7 +9,7 @@ import { useAuth } from "../context/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const tabs = ["All", "Support", "Wellbeing", "Mindfulness"];
+const tabs = ["All", "By You", "Support", "Wellbeing", "Mindfulness"];
 
 const shapeCommunity = (community) => ({
   id: community._id,
@@ -21,6 +21,7 @@ const shapeCommunity = (community) => ({
   accent: community.accent,
   members: String(community.memberCount),
   joined: community.joinedByMe,
+  createdByMe: community.createdByMe,
 });
 
 export default function Communities() {
@@ -30,6 +31,7 @@ export default function Communities() {
   const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
@@ -62,7 +64,12 @@ export default function Communities() {
   const term = query.trim().toLowerCase();
 
   const visible = communities.filter((community) => {
-    const matchesTab = activeTab === "All" || community.category === activeTab;
+    const matchesTab =
+      activeTab === "All"
+        ? true
+        : activeTab === "By You"
+          ? community.createdByMe
+          : community.category === activeTab;
     const matchesQuery = term
       ? community.name.toLowerCase().includes(term) ||
         community.description.toLowerCase().includes(term)
@@ -105,6 +112,32 @@ export default function Communities() {
 
   const openCommunity = (community) => {
     navigate(`/communities/${community.realId}`);
+  };
+
+  const deleteCommunity = async (community) => {
+    if (
+      !window.confirm(
+        `Delete "${community.name}"? This will remove the community and its posts.`
+      )
+    ) {
+      return;
+    }
+    setDeletingId(community.id);
+    try {
+      const res = await fetch(`${API_URL}/communities/${community.realId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setCommunities((current) =>
+          current.filter((item) => item.id !== community.id)
+        );
+      }
+    } catch {
+      // ignore
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const createCommunity = async (payload) => {
@@ -229,6 +262,11 @@ export default function Communities() {
                   <Users size={11} />
                   {community.members} members
                 </p>
+                {community.createdByMe && (
+                  <span className="mt-2 inline-flex w-fit items-center rounded-full bg-mint-soft px-2.5 py-0.5 text-[11px] font-semibold text-mint-deep">
+                    Created by you
+                  </span>
+                )}
                 <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">
                   {community.description}
                 </p>
@@ -252,6 +290,16 @@ export default function Communities() {
                   >
                     View
                   </button>
+                  {community.createdByMe && (
+                    <button
+                      onClick={() => deleteCommunity(community)}
+                      disabled={deletingId === community.id}
+                      aria-label="Delete community"
+                      className="flex items-center justify-center rounded-xl border border-blossom/40 bg-white px-3 py-2 text-blossom-deep transition-colors hover:bg-blossom-soft disabled:opacity-60"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                 </div>
               </Card>
             );

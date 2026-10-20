@@ -86,7 +86,12 @@ async function ensureSeed() {
   }
 }
 
-const shapeCommunity = (community, memberCount, joinedByMe) => ({
+const shapeCommunity = (
+  community,
+  memberCount,
+  joinedByMe,
+  createdByMe = false
+) => ({
   _id: community._id,
   name: community.name,
   description: community.description,
@@ -95,6 +100,7 @@ const shapeCommunity = (community, memberCount, joinedByMe) => ({
   accent: community.accent,
   memberCount,
   joinedByMe,
+  createdByMe,
 });
 
 router.get("/", auth, async (req, res) => {
@@ -115,12 +121,14 @@ router.get("/", auth, async (req, res) => {
       counts.map((c) => [c._id.toString(), c.count])
     );
 
+    const userId = req.user._id.toString();
     res.json({
       communities: communities.map((c) =>
         shapeCommunity(
           c,
           countMap.get(c._id.toString()) || 0,
-          joinedIds.has(c._id.toString())
+          joinedIds.has(c._id.toString()),
+          Boolean(c.createdBy) && c.createdBy.toString() === userId
         )
       ),
     });
@@ -153,10 +161,39 @@ router.post("/", auth, async (req, res) => {
       role: "owner",
     });
     res.status(201).json({
-      community: shapeCommunity(community, 1, true),
+      community: shapeCommunity(community, 1, true, true),
     });
   } catch (error) {
     console.error("Create community error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid community" });
+    }
+    const community = await Community.findById(req.params.id);
+    if (!community) {
+      return res.status(404).json({ message: "Community not found" });
+    }
+    if (
+      !community.createdBy ||
+      community.createdBy.toString() !== req.user._id.toString()
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Only the creator can delete this community" });
+    }
+    await Promise.all([
+      CommunityMember.deleteMany({ community: community._id }),
+      Post.deleteMany({ community: community._id }),
+    ]);
+    await community.deleteOne();
+    res.json({ ok: true });
+  } catch (error) {
+    console.error("Delete community error:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -178,7 +215,13 @@ router.get("/:id", auth, async (req, res) => {
       }),
     ]);
     res.json({
-      community: shapeCommunity(community, memberCount, Boolean(membership)),
+      community: shapeCommunity(
+        community,
+        memberCount,
+        Boolean(membership),
+        Boolean(community.createdBy) &&
+          community.createdBy.toString() === req.user._id.toString()
+      ),
     });
   } catch (error) {
     console.error("Get community error:", error.message);
