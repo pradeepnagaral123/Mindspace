@@ -194,7 +194,7 @@ export default function Communities() {
                   {community.description}
                 </p>
 
-                <div className="mt-4 flex items-center">
+                <div className="mt-4 flex items-center gap-2">
                   <button
                     onClick={() => toggleJoin(community)}
                     disabled={togglingId === community.id}
@@ -206,6 +206,12 @@ export default function Communities() {
                   >
                     {joinedStatus && <Check size={14} />}
                     {joinedStatus ? "Joined" : "Join"}
+                  </button>
+                  <button
+                    onClick={() => openCommunity(community)}
+                    className="rounded-xl border border-line bg-white px-3 py-2 text-[13px] font-semibold text-ink transition-colors hover:bg-cream"
+                  >
+                    View
                   </button>
                 </div>
               </Card>
