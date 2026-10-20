@@ -15,7 +15,7 @@ const iconChoices = [
   { name: "compass", accent: "bg-mint-soft text-mint-deep" },
 ];
 
-export default function CreateCommunityModal({ open, onClose, onSubmit, submitting }) {
+export default function CreateCommunityModal({ open, onClose, onSubmit, submitting, error }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Support");
@@ -137,6 +137,12 @@ export default function CreateCommunityModal({ open, onClose, onSubmit, submitti
             </div>
           </div>
         </div>
+
+        {error && (
+          <p className="px-6 text-[12px] font-medium text-blossom-deep">
+            {error}
+          </p>
+        )}
 
         <div className="flex justify-end gap-2 border-t border-line/70 px-6 py-4">
           <button

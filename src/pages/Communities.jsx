@@ -22,6 +22,7 @@ export default function Communities() {
   const [created, setCreated] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
   const { query, setQuery } = useSearch();
 
   const load = useCallback(async () => {
@@ -122,6 +123,7 @@ export default function Communities() {
       return;
     }
     setCreating(true);
+    setCreateError("");
     try {
       const res = await fetch(`${API_URL}/communities`, {
         method: "POST",
@@ -131,9 +133,12 @@ export default function Communities() {
         },
         body: JSON.stringify(payload),
       });
-      const data = res.ok ? await res.json() : null;
-      if (data?.community) {
-        const c = data.community;
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.message || `Request failed (${res.status})`);
+      }
+      const c = data?.community;
+      if (c) {
         setCreated((current) => [
           {
             id: c._id,
@@ -152,8 +157,8 @@ export default function Communities() {
         setActiveTab("All");
         navigate(`/communities/${c._id}`);
       }
-    } catch {
-      // ignore
+    } catch (error) {
+      setCreateError(error.message || "Could not create community");
     } finally {
       setCreating(false);
     }
@@ -300,9 +305,13 @@ export default function Communities() {
 
       <CreateCommunityModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setCreateError("");
+        }}
         onSubmit={createCommunity}
         submitting={creating}
+        error={createError}
       />
     </div>
   );
