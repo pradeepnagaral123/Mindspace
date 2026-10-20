@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowRight,
+  Bookmark,
   BookOpen,
   Clock,
   Ear,
@@ -13,6 +14,9 @@ import {
 import Card from "../components/Card";
 import ArticleReaderModal from "../components/ArticleReaderModal";
 import { useSearch } from "../context/SearchContext";
+import { useAuth } from "../context/AuthContext";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const categories = ["All", "Articles", "Exercises", "Guided Audio", "Guides"];
 
@@ -26,6 +30,7 @@ const resources = [
     readTime: "6 min read",
     accent: "bg-mint-soft text-mint-deep",
     icon: BookOpen,
+    savedIcon: "bookOpen",
     featured: true,
     body: [
       {
@@ -167,6 +172,7 @@ const resources = [
     readTime: "3 min practice",
     accent: "bg-lavender-soft text-lavender-deep",
     icon: Ear,
+    savedIcon: "wind",
   },
   {
     id: "r3",
@@ -177,6 +183,7 @@ const resources = [
     readTime: "10 min audio",
     accent: "bg-blossom-soft text-blossom-deep",
     icon: Play,
+    savedIcon: "sparkles",
   },
   {
     id: "r4",
@@ -187,6 +194,7 @@ const resources = [
     readTime: "12 min guide",
     accent: "bg-sun-soft text-sun-deep",
     icon: Flame,
+    savedIcon: "graduationCap",
   },
   {
     id: "r5",
@@ -197,6 +205,7 @@ const resources = [
     readTime: "5 min read",
     accent: "bg-mint-soft text-mint-deep",
     icon: BookOpen,
+    savedIcon: "bookOpen",
     body: [
       {
         type: "lead",
@@ -325,6 +334,7 @@ const resources = [
     readTime: "5 min practice",
     accent: "bg-peach-soft text-peach-deep",
     icon: Sparkles,
+    savedIcon: "flower2",
   },
   {
     id: "r7",
@@ -335,6 +345,7 @@ const resources = [
     readTime: "7 min audio",
     accent: "bg-lavender-soft text-lavender-deep",
     icon: Play,
+    savedIcon: "sparkles",
   },
   {
     id: "r8",
@@ -344,6 +355,7 @@ const resources = [
       "Words can feel hard to find. Here are scripts and prompts to help you open up to people you trust.",
     readTime: "8 min guide",
     accent: "bg-blossom-soft text-blossom-deep",
+    savedIcon: "bookOpen",
     icon: BookOpen,
   },
 ];
@@ -351,9 +363,81 @@ const resources = [
 export default function Resources() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [reading, setReading] = useState(null);
+  const [savedIds, setSavedIds] = useState(() => new Set());
   const { query, setQuery } = useSearch();
+  const { token } = useAuth();
 
   const term = query.trim().toLowerCase();
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    const loadSaved = async () => {
+      try {
+        const res = await fetch(`${API_URL}/saved`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (cancelled) return;
+          setSavedIds(
+            new Set(
+              (data.items || [])
+                .filter((item) => item.itemType === "resource")
+                .map((item) => item.refId)
+            )
+          );
+        }
+      } catch {
+        // ignore
+      }
+    };
+    loadSaved();
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  const toggleSave = useCallback(
+    async (resource) => {
+      const isSaved = savedIds.has(resource.id);
+      setSavedIds((current) => {
+        const next = new Set(current);
+        if (isSaved) next.delete(resource.id);
+        else next.add(resource.id);
+        return next;
+      });
+      try {
+        if (isSaved) {
+          await fetch(`${API_URL}/saved/resource/${resource.id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        } else {
+          await fetch(`${API_URL}/saved`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              itemType: "resource",
+              refId: resource.id,
+              title: resource.title,
+              description: resource.description,
+              category: resource.category,
+              meta: resource.readTime,
+              icon: resource.savedIcon || "",
+              accent: resource.accent,
+            }),
+          });
+        }
+      } catch {
+        // ignore
+      }
+    },
+    [savedIds, token]
+  );
 
   const visible = resources.filter((resource) => {
     const matchesCategory =
@@ -475,9 +559,31 @@ export default function Resources() {
                   >
                     <Icon size={20} strokeWidth={2} />
                   </span>
-                  <span className="rounded-full bg-cream px-2 py-0.5 text-[11px] font-semibold text-muted">
-                    {resource.category}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="rounded-full bg-cream px-2 py-0.5 text-[11px] font-semibold text-muted">
+                      {resource.category}
+                    </span>
+                    <button
+                      onClick={() => toggleSave(resource)}
+                      className={`rounded-lg p-1.5 transition-colors ${
+                        savedIds.has(resource.id)
+                          ? "text-mint-deep"
+                          : "text-muted hover:bg-cream hover:text-ink"
+                      }`}
+                      aria-label={
+                        savedIds.has(resource.id)
+                          ? "Remove from saved"
+                          : "Save resource"
+                      }
+                    >
+                      <Bookmark
+                        size={16}
+                        className={
+                          savedIds.has(resource.id) ? "fill-current" : ""
+                        }
+                      />
+                    </button>
+                  </div>
                 </div>
                 <h3 className="mt-4 text-[15px] font-bold leading-snug text-ink group-hover:text-mint-deep">
                   {resource.title}

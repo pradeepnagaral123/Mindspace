@@ -310,8 +310,10 @@ router.get("/:id/posts", auth, async (req, res) => {
     const posts = await Post.find({ community: req.params.id })
       .sort({ createdAt: -1 })
       .limit(50)
-      .populate("author", "name avatar");
+      .populate("author", "name avatar")
+      .populate("comments.author", "name avatar");
 
+    const userId = req.user._id.toString();
     res.json({
       posts: posts.map((post) => ({
         _id: post._id,
@@ -319,11 +321,21 @@ router.get("/:id/posts", auth, async (req, res) => {
         author: post.author
           ? { _id: post.author._id, name: post.author.name }
           : null,
+        isAuthor: Boolean(post.author) && post.author._id.toString() === userId,
         likeCount: post.likes.length,
-        likedByMe: post.likes.some(
-          (id) => id.toString() === req.user._id.toString()
-        ),
+        likedByMe: post.likes.some((id) => id.toString() === userId),
         createdAt: post.createdAt,
+        comments: (post.comments || []).map((comment) => ({
+          _id: comment._id,
+          text: comment.text,
+          createdAt: comment.createdAt,
+          author: comment.author
+            ? { _id: comment.author._id, name: comment.author.name }
+            : null,
+          mine:
+            Boolean(comment.author) &&
+            comment.author._id.toString() === userId,
+        })),
       })),
     });
   } catch (error) {
@@ -376,9 +388,11 @@ router.post("/:id/posts", auth, async (req, res) => {
         _id: post._id,
         text: post.text,
         author: { _id: req.user._id, name: req.user.name },
+        isAuthor: true,
         likeCount: 0,
         likedByMe: false,
         createdAt: post.createdAt,
+        comments: [],
       },
     });
   } catch (error) {
@@ -397,6 +411,11 @@ router.post("/posts/:id/like", auth, async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
     const userId = req.user._id.toString();
+    if (post.author.toString() === userId) {
+      return res
+        .status(403)
+        .json({ message: "You cannot like your own post" });
+    }
     const liked = post.likes.some((id) => id.toString() === userId);
     if (liked) {
       post.likes = post.likes.filter((id) => id.toString() !== userId);
@@ -407,6 +426,61 @@ router.post("/posts/:id/like", auth, async (req, res) => {
     res.json({ liked: !liked, likeCount: post.likes.length });
   } catch (error) {
     console.error("Like post error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.post("/posts/:id/comments", auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: "Invalid post" });
+    }
+    const { text } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ message: "Reply text is required" });
+    }
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    if (post.author.toString() === req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ message: "You cannot reply to your own post" });
+    }
+    const membership = await CommunityMember.findOne({
+      community: post.community,
+      user: req.user._id,
+    });
+    if (!membership) {
+      return res
+        .status(403)
+        .json({ message: "Join the community to reply" });
+    }
+
+    post.comments.push({ author: req.user._id, text: text.trim().slice(0, 1000) });
+    await post.save();
+
+    const comment = post.comments[post.comments.length - 1];
+    notify({
+      user: post.author,
+      type: "system",
+      title: "New reply on your post",
+      body: `${req.user.name} replied to your post.`,
+      link: `/communities/${post.community}`,
+    });
+
+    res.status(201).json({
+      comment: {
+        _id: comment._id,
+        text: comment.text,
+        createdAt: comment.createdAt,
+        author: { _id: req.user._id, name: req.user.name },
+        mine: true,
+      },
+    });
+  } catch (error) {
+    console.error("Add comment error:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 });

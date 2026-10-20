@@ -4,7 +4,6 @@ import ConnectionsCard from "../components/ConnectionsCard";
 import RecommendedCommunities from "../components/RecommendedCommunities";
 import DailyCheckIn from "../components/DailyCheckIn";
 import CommunityFeed from "../components/CommunityFeed";
-import UpcomingEvents from "../components/UpcomingEvents";
 import EmergencySupportCard from "../components/EmergencySupportCard";
 
 export default function Dashboard() {
@@ -24,7 +23,6 @@ export default function Dashboard() {
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
         <CommunityFeed />
         <div className="space-y-5 lg:space-y-6">
-          <UpcomingEvents />
           <EmergencySupportCard />
         </div>
       </div>

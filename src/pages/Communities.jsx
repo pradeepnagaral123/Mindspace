@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, Plus, Search, Trash2, Users } from "lucide-react";
+import { Bookmark, Check, Plus, Search, Trash2, Users } from "lucide-react";
 import Card from "../components/Card";
 import Icon from "../components/icons";
 import CreateCommunityModal from "../components/CreateCommunityModal";
@@ -35,6 +35,7 @@ export default function Communities() {
   const [modalOpen, setModalOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
+  const [savedIds, setSavedIds] = useState(() => new Set());
   const { query, setQuery } = useSearch();
 
   const load = useCallback(async () => {
@@ -43,12 +44,27 @@ export default function Communities() {
       return;
     }
     try {
-      const res = await fetch(`${API_URL}/communities`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const [res, savedRes] = await Promise.all([
+        fetch(`${API_URL}/communities`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${API_URL}/saved`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
       if (res.ok) {
         const data = await res.json();
         setCommunities((data.communities || []).map(shapeCommunity));
+      }
+      if (savedRes.ok) {
+        const data = await savedRes.json();
+        setSavedIds(
+          new Set(
+            (data.items || [])
+              .filter((item) => item.itemType === "community")
+              .map((item) => item.refId)
+          )
+        );
       }
     } catch {
       // ignore
@@ -174,6 +190,44 @@ export default function Communities() {
     }
   };
 
+  const toggleSave = async (community) => {
+    const isSaved = savedIds.has(community.id);
+    setSavedIds((current) => {
+      const next = new Set(current);
+      if (isSaved) next.delete(community.id);
+      else next.add(community.id);
+      return next;
+    });
+    try {
+      if (isSaved) {
+        await fetch(`${API_URL}/saved/community/${community.realId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } else {
+        await fetch(`${API_URL}/saved`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            itemType: "community",
+            refId: community.realId,
+            title: community.name,
+            description: community.description,
+            category: community.category,
+            meta: `${community.members} members`,
+            icon: community.icon,
+            accent: community.accent,
+          }),
+        });
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   return (
     <div className="space-y-6 lg:space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -246,11 +300,33 @@ export default function Communities() {
                 key={community.id}
                 className="group flex flex-col p-5 transition-shadow hover:shadow-md"
               >
-                <span
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl ${community.accent}`}
-                >
-                  <Icon name={community.icon} size={22} strokeWidth={2} />
-                </span>
+                <div className="flex items-start justify-between">
+                  <span
+                    className={`flex h-12 w-12 items-center justify-center rounded-2xl ${community.accent}`}
+                  >
+                    <Icon name={community.icon} size={22} strokeWidth={2} />
+                  </span>
+                  <button
+                    onClick={() => toggleSave(community)}
+                    aria-label={
+                      savedIds.has(community.id)
+                        ? "Remove from saved"
+                        : "Save community"
+                    }
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl border transition-colors ${
+                      savedIds.has(community.id)
+                        ? "border-mint/40 bg-mint-soft text-mint-deep hover:bg-mint-soft/70"
+                        : "border-line bg-white text-muted hover:bg-cream hover:text-ink"
+                    }`}
+                  >
+                    <Bookmark
+                      size={16}
+                      className={
+                        savedIds.has(community.id) ? "fill-current" : ""
+                      }
+                    />
+                  </button>
+                </div>
 
                 <button
                   onClick={() => openCommunity(community)}

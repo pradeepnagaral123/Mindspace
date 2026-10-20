@@ -176,42 +176,6 @@ export const feedPosts = [
   },
 ];
 
-export const events = [
-  {
-    id: "e1",
-    title: "Mindfulness Meditation",
-    type: "Meditation",
-    date: "Today",
-    day: "Aug 10",
-    time: "6:30 PM",
-    mode: "Online",
-    color: "bg-mint-soft text-mint-deep",
-    icon: "flower2",
-  },
-  {
-    id: "e2",
-    title: "Student Talk Circle",
-    type: "Support Circle",
-    date: "Tomorrow",
-    day: "Aug 11",
-    time: "5:00 PM",
-    mode: "In-person",
-    color: "bg-lavender-soft text-lavender-deep",
-    icon: "usersRound",
-  },
-  {
-    id: "e3",
-    title: "Managing Anxiety Workshop",
-    type: "Workshop",
-    date: "Sat",
-    day: "Aug 15",
-    time: "10:00 AM",
-    mode: "Online",
-    color: "bg-peach-soft text-peach-deep",
-    icon: "compass",
-  },
-];
-
 export const checkInMetrics = [
   { label: "Stress", value: 2, max: 5, color: "bg-mint" },
   { label: "Energy", value: 3, max: 5, color: "bg-sun" },

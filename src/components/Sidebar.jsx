@@ -6,7 +6,6 @@ import {
   MessageCircle,
   ClipboardList,
   BookOpen,
-  Calendar,
   Bookmark,
   LifeBuoy,
   ShieldCheck,
@@ -28,7 +27,6 @@ const mainNav = [
   { to: "/check-in", label: "Check-in", icon: ClipboardList },
   { to: "/resources", label: "Resources", icon: BookOpen },
   { to: "/journal", label: "Journal", icon: PenLine },
-  { to: "/events", label: "Events", icon: Calendar },
   { to: "/saved", label: "Saved", icon: Bookmark },
 ];
 

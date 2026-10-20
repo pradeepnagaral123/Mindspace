@@ -8,7 +8,6 @@ import FindAPeer from "./pages/FindAPeer";
 import Messages from "./pages/Messages";
 import CheckIn from "./pages/CheckIn";
 import Resources from "./pages/Resources";
-import Events from "./pages/Events";
 import Saved from "./pages/Saved";
 import SupportCenter from "./pages/SupportCenter";
 import Safety from "./pages/Safety";
@@ -49,7 +48,6 @@ function App() {
           <Route path="/messages" element={<Messages />} />
           <Route path="/check-in" element={<CheckIn />} />
           <Route path="/resources" element={<Resources />} />
-          <Route path="/events" element={<Events />} />
           <Route path="/saved" element={<Saved />} />
           <Route path="/support" element={<SupportCenter />} />
           <Route path="/safety" element={<Safety />} />

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
+  Bookmark,
   BookOpen,
   Check,
   ChevronRight,
@@ -13,9 +14,9 @@ import {
   MoreHorizontal,
   NotebookPen,
   Pencil,
+  Reply,
   Scale,
   Send,
-  Share2,
   ShieldCheck,
   Sparkles,
   Trash2,
@@ -74,6 +75,11 @@ export default function CommunityDetail() {
   const [editText, setEditText] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [replyOpenId, setReplyOpenId] = useState(null);
+  const [replyText, setReplyText] = useState("");
+  const [replyingId, setReplyingId] = useState(null);
+  const [savedIds, setSavedIds] = useState(() => new Set());
+  const [communitySaved, setCommunitySaved] = useState(false);
 
   const load = useCallback(async () => {
     if (!token) {
@@ -82,11 +88,28 @@ export default function CommunityDetail() {
     }
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const [communityRes, postsRes, membersRes] = await Promise.all([
+      const [communityRes, postsRes, membersRes, savedRes] = await Promise.all([
         fetch(`${API_URL}/communities/${id}`, { headers }),
         fetch(`${API_URL}/communities/${id}/posts`, { headers }),
         fetch(`${API_URL}/communities/${id}/members`, { headers }),
+        fetch(`${API_URL}/saved`, { headers }),
       ]);
+      if (savedRes.ok) {
+        const data = await savedRes.json();
+        const items = data.items || [];
+        setSavedIds(
+          new Set(
+            items
+              .filter((item) => item.itemType === "post")
+              .map((item) => item.refId)
+          )
+        );
+        setCommunitySaved(
+          items.some(
+            (item) => item.itemType === "community" && item.refId === id
+          )
+        );
+      }
       if (communityRes.status === 404) {
         setNotFound(true);
         return;
@@ -310,6 +333,110 @@ export default function CommunityDetail() {
     }
   };
 
+  const submitReply = async (event, post) => {
+    event.preventDefault();
+    if (!replyText.trim() || replyingId) return;
+    setReplyingId(post._id);
+    try {
+      const res = await fetch(
+        `${API_URL}/communities/posts/${post._id}/comments`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ text: replyText }),
+        }
+      );
+      const data = res.ok ? await res.json() : null;
+      if (data) {
+        setPosts((current) =>
+          current.map((item) =>
+            item._id === post._id
+              ? { ...item, comments: [...(item.comments || []), data.comment] }
+              : item
+          )
+        );
+        setReplyText("");
+        setReplyOpenId(null);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setReplyingId(null);
+    }
+  };
+
+  const toggleSave = async (post) => {
+    const isSaved = savedIds.has(post._id);
+    setSavedIds((current) => {
+      const next = new Set(current);
+      if (isSaved) next.delete(post._id);
+      else next.add(post._id);
+      return next;
+    });
+    try {
+      if (isSaved) {
+        await fetch(`${API_URL}/saved/post/${post._id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } else {
+        await fetch(`${API_URL}/saved`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            itemType: "post",
+            refId: post._id,
+            title: post.author?.name || "Community post",
+            description: post.text,
+            meta: community?.name || "",
+          }),
+        });
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const toggleSaveCommunity = async () => {
+    if (!community) return;
+    const isSaved = communitySaved;
+    setCommunitySaved(!isSaved);
+    try {
+      if (isSaved) {
+        await fetch(`${API_URL}/saved/community/${community._id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } else {
+        await fetch(`${API_URL}/saved`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            itemType: "community",
+            refId: community._id,
+            title: community.name,
+            description: community.description,
+            category: community.category,
+            meta: `${community.memberCount} members`,
+            icon: community.icon,
+            accent: community.accent,
+          }),
+        });
+      }
+    } catch {
+      // ignore
+    }
+  };
+
   if (loading) {
     return (
       <Card className="p-10 text-center">
@@ -387,18 +514,37 @@ export default function CommunityDetail() {
                 </div>
               </div>
 
-              <button
-                onClick={toggleJoin}
-                disabled={toggling}
-                className={`relative z-10 flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-colors disabled:opacity-60 sm:ml-auto ${
-                  community.joinedByMe
-                    ? "border border-white/70 bg-white/80 text-ink backdrop-blur-sm hover:bg-white"
-                    : "bg-navy text-white hover:bg-navy-2"
-                }`}
-              >
-                {community.joinedByMe && <Check size={14} />}
-                {community.joinedByMe ? "Leave group" : "Join group"}
-              </button>
+              <div className="relative z-10 flex shrink-0 items-center gap-2 sm:ml-auto">
+                <button
+                  onClick={toggleSaveCommunity}
+                  aria-label={
+                    communitySaved ? "Remove from saved" : "Save community"
+                  }
+                  className={`flex items-center gap-1.5 rounded-xl border px-3 py-2.5 text-[13px] font-semibold transition-colors ${
+                    communitySaved
+                      ? "border-mint/40 bg-mint-soft text-mint-deep hover:bg-mint-soft/70"
+                      : "border-white/70 bg-white/80 text-ink backdrop-blur-sm hover:bg-white"
+                  }`}
+                >
+                  <Bookmark
+                    size={14}
+                    className={communitySaved ? "fill-current" : ""}
+                  />
+                  {communitySaved ? "Saved" : "Save"}
+                </button>
+                <button
+                  onClick={toggleJoin}
+                  disabled={toggling}
+                  className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-colors disabled:opacity-60 ${
+                    community.joinedByMe
+                      ? "border border-white/70 bg-white/80 text-ink backdrop-blur-sm hover:bg-white"
+                      : "bg-navy text-white hover:bg-navy-2"
+                  }`}
+                >
+                  {community.joinedByMe && <Check size={14} />}
+                  {community.joinedByMe ? "Leave group" : "Join group"}
+                </button>
+              </div>
             </div>
           </Card>
 
@@ -555,30 +701,120 @@ export default function CommunityDetail() {
                     </p>
                   )}
 
-                  <div className="mt-4 flex items-center justify-between border-t border-line/70 pt-3">
+                  <div className="mt-4 flex items-center gap-2 border-t border-line/70 pt-3">
+                    {post.isAuthor ? (
+                      <span className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-muted">
+                        <Heart size={14} />
+                        {post.likeCount}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => toggleLike(post)}
+                        className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold transition-colors ${
+                          post.likedByMe
+                            ? "bg-blossom-soft text-blossom-deep"
+                            : "text-muted hover:bg-blossom-soft/50 hover:text-blossom-deep"
+                        }`}
+                      >
+                        <Heart
+                          size={14}
+                          className={post.likedByMe ? "fill-current" : ""}
+                        />
+                        {post.likeCount}
+                      </button>
+                    )}
                     <button
-                      onClick={() => toggleLike(post)}
-                      className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold transition-colors ${
-                        post.likedByMe
-                          ? "bg-blossom-soft text-blossom-deep"
-                          : "text-muted hover:bg-blossom-soft/50 hover:text-blossom-deep"
+                      onClick={() => {
+                        setReplyOpenId((current) =>
+                          current === post._id ? null : post._id
+                        );
+                        setReplyText("");
+                      }}
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-muted transition-colors hover:bg-cream hover:text-ink"
+                    >
+                      <MessageCircle size={14} />
+                      Comment{post.comments?.length ? ` (${post.comments.length})` : ""}
+                    </button>
+                    <button
+                      onClick={() => toggleSave(post)}
+                      className={`ml-auto flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold transition-colors ${
+                        savedIds.has(post._id)
+                          ? "text-mint-deep"
+                          : "text-muted hover:bg-cream hover:text-ink"
                       }`}
                     >
-                      <Heart
+                      <Bookmark
                         size={14}
-                        className={post.likedByMe ? "fill-current" : ""}
+                        className={savedIds.has(post._id) ? "fill-current" : ""}
                       />
-                      {post.likeCount}
-                    </button>
-                    <button className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-muted transition-colors hover:bg-cream hover:text-ink">
-                      <MessageCircle size={14} />
-                      Comment
-                    </button>
-                    <button className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-muted transition-colors hover:bg-cream hover:text-ink">
-                      <Share2 size={14} />
-                      Share
+                      {savedIds.has(post._id) ? "Saved" : "Save"}
                     </button>
                   </div>
+
+                  {(post.comments?.length > 0 || replyOpenId === post._id) && (
+                    <div className="mt-3 space-y-2 border-t border-line/70 pt-3">
+                      {(post.comments || []).map((comment) => (
+                        <div key={comment._id} className="flex items-start gap-2">
+                          <Avatar
+                            name={comment.author?.name || "Member"}
+                            size={28}
+                            gradient="mint"
+                          />
+                          <div className="min-w-0 flex-1 rounded-xl bg-cream/60 px-3 py-2">
+                            <p className="text-[12px] font-bold text-ink">
+                              {comment.author?.name || "Member"}
+                              {comment.mine && (
+                                <span className="ml-1.5 text-[10px] font-semibold text-mint-deep">
+                                  you
+                                </span>
+                              )}
+                            </p>
+                            <p className="mt-0.5 text-[13px] leading-relaxed whitespace-pre-wrap text-ink">
+                              {comment.text}
+                            </p>
+                            <p className="mt-0.5 text-[10px] text-muted">
+                              {timeAgo(comment.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+
+                      {replyOpenId === post._id && !post.isAuthor && (
+                        <form
+                          onSubmit={(event) => submitReply(event, post)}
+                          className="flex items-start gap-2"
+                        >
+                          <Avatar
+                            name={user?.name || ""}
+                            size={28}
+                            gradient="blossom"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <textarea
+                              rows={2}
+                              value={replyText}
+                              onChange={(event) =>
+                                setReplyText(event.target.value)
+                              }
+                              placeholder="Write a reply..."
+                              autoFocus
+                              className="w-full resize-none rounded-xl border border-line bg-cream/50 px-3 py-2 text-[13px] text-ink outline-none transition-colors placeholder:text-muted/70 focus:border-mint-deep focus:ring-2 focus:ring-mint/40"
+                            />
+                            <div className="mt-1.5 flex justify-end">
+                              <button
+                                type="submit"
+                                disabled={!replyText.trim() || replyingId === post._id}
+                                className="flex items-center gap-1.5 rounded-lg bg-navy px-3 py-1.5 text-[12px] font-semibold text-white transition-colors hover:bg-navy-2 disabled:opacity-50"
+                              >
+                                <Reply size={12} />
+                                {replyingId === post._id ? "Replying..." : "Reply"}
+                              </button>
+                            </div>
+                          </div>
+                        </form>
+                      )}
+                    </div>
+                  )}
                 </Card>
               ))}
             </div>
