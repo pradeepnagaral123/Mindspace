@@ -1,42 +1,57 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Check, Plus, Search, Users } from "lucide-react";
 import Card from "../components/Card";
 import Icon from "../components/icons";
 import CreateCommunityModal from "../components/CreateCommunityModal";
 import { useSearch } from "../context/SearchContext";
 import { useAuth } from "../context/AuthContext";
-import { communities as communityData } from "../data/mockData";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const tabs = ["All", "Support", "Wellbeing", "Mindfulness"];
 
+const shapeCommunity = (community) => ({
+  id: community._id,
+  realId: community._id,
+  name: community.name,
+  description: community.description,
+  category: community.category,
+  icon: community.icon,
+  accent: community.accent,
+  members: String(community.memberCount),
+  joined: community.joinedByMe,
+});
+
 export default function Communities() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("All");
-  const [real, setReal] = useState(null);
-  const [joined, setJoined] = useState({});
+  const [communities, setCommunities] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [togglingId, setTogglingId] = useState(null);
-  const [created, setCreated] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const { query, setQuery } = useSearch();
 
   const load = useCallback(async () => {
-    if (!token) return;
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch(`${API_URL}/communities`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();
-        setReal((data.communities || [])[0] || null);
+        setCommunities((data.communities || []).map(shapeCommunity));
       }
     } catch {
       // ignore
+    } finally {
+      setLoading(false);
     }
   }, [token]);
 
@@ -46,24 +61,7 @@ export default function Communities() {
 
   const term = query.trim().toLowerCase();
 
-  const cards = [
-    ...created,
-    ...communityData.map((community) => {
-      if (community.id === "student-support" && real) {
-        return {
-          ...community,
-          realId: real._id,
-          name: real.name,
-          description: real.description,
-          members: String(real.memberCount),
-          joined: real.joinedByMe,
-        };
-      }
-      return community;
-    }),
-  ];
-
-  const visible = cards.filter((community) => {
+  const visible = communities.filter((community) => {
     const matchesTab = activeTab === "All" || community.category === activeTab;
     const matchesQuery = term
       ? community.name.toLowerCase().includes(term) ||
@@ -72,49 +70,41 @@ export default function Communities() {
     return matchesTab && matchesQuery;
   });
 
-  const isJoined = (community) => joined[community.id] ?? community.joined;
-
   const toggleJoin = async (community) => {
-    if (community.realId) {
-      setTogglingId(community.id);
-      try {
-        const res = await fetch(
-          `${API_URL}/communities/${community.realId}/${
-            isJoined(community) ? "leave" : "join"
-          }`,
-          {
-            method: isJoined(community) ? "DELETE" : "POST",
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const data = res.ok ? await res.json() : null;
-        if (data) {
-          setReal((current) =>
-            current
-              ? {
-                  ...current,
-                  joinedByMe: data.joined,
-                  memberCount: data.memberCount,
-                }
-              : current
-          );
+    setTogglingId(community.id);
+    try {
+      const res = await fetch(
+        `${API_URL}/communities/${community.realId}/${
+          community.joined ? "leave" : "join"
+        }`,
+        {
+          method: community.joined ? "DELETE" : "POST",
+          headers: { Authorization: `Bearer ${token}` },
         }
-      } catch {
-        // ignore
-      } finally {
-        setTogglingId(null);
+      );
+      const data = res.ok ? await res.json() : null;
+      if (data) {
+        setCommunities((current) =>
+          current.map((item) =>
+            item.id === community.id
+              ? {
+                  ...item,
+                  joined: data.joined,
+                  members: String(data.memberCount),
+                }
+              : item
+          )
+        );
       }
-      return;
+    } catch {
+      // ignore
+    } finally {
+      setTogglingId(null);
     }
-    setJoined((current) => ({ ...current, [community.id]: !isJoined(community) }));
   };
 
   const openCommunity = (community) => {
-    if (community.realId) {
-      navigate(`/communities/${community.realId}`);
-    } else {
-      navigate(`/communities/${community.id}`);
-    }
+    navigate(`/communities/${community.realId}`);
   };
 
   const createCommunity = async (payload) => {
@@ -139,20 +129,7 @@ export default function Communities() {
       }
       const c = data?.community;
       if (c) {
-        setCreated((current) => [
-          {
-            id: c._id,
-            realId: c._id,
-            name: c.name,
-            description: c.description,
-            category: c.category,
-            icon: c.icon,
-            accent: c.accent,
-            members: String(c.memberCount),
-            joined: c.joinedByMe,
-          },
-          ...current,
-        ]);
+        setCommunities((current) => [shapeCommunity(c), ...current]);
         setModalOpen(false);
         setActiveTab("All");
         navigate(`/communities/${c._id}`);
@@ -216,7 +193,11 @@ export default function Communities() {
         </div>
       </div>
 
-      {visible.length === 0 ? (
+      {loading ? (
+        <Card className="p-10 text-center">
+          <p className="text-sm text-muted">Loading communities...</p>
+        </Card>
+      ) : visible.length === 0 ? (
         <Card className="p-10 text-center">
           <p className="text-sm font-semibold text-ink">Nothing found yet</p>
           <p className="mt-1 text-[13px] text-muted">
@@ -226,7 +207,7 @@ export default function Communities() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((community) => {
-            const joinedStatus = isJoined(community);
+            const joinedStatus = community.joined;
             return (
               <Card
                 key={community.id}

@@ -8,19 +8,81 @@ import { notify } from "../utils/notify.js";
 
 const router = express.Router();
 
-const SEED_COMMUNITY = {
-  name: "Student Support Circle",
-  description:
-    "Exams, deadlines and everything in between. We get it.",
-  category: "Support",
-  icon: "graduationCap",
-  accent: "bg-mint-soft text-mint-deep",
-};
+const SEED_COMMUNITIES = [
+  {
+    name: "Student Support Circle",
+    description: "Exams, deadlines and everything in between. We get it.",
+    category: "Support",
+    icon: "graduationCap",
+    accent: "bg-mint-soft text-mint-deep",
+  },
+  {
+    name: "Anxiety Relief",
+    description: "Gentle practices and kind words for anxious days.",
+    category: "Wellbeing",
+    icon: "wind",
+    accent: "bg-lavender-soft text-lavender-deep",
+  },
+  {
+    name: "Mindful Moments",
+    description: "Slow down, breathe and notice the small good things.",
+    category: "Mindfulness",
+    icon: "flower2",
+    accent: "bg-blossom-soft text-blossom-deep",
+  },
+  {
+    name: "New Parents United",
+    description: "Sleepless nights, big feelings and tiny victories.",
+    category: "Support",
+    icon: "usersRound",
+    accent: "bg-peach-soft text-peach-deep",
+  },
+  {
+    name: "Sleep Better Together",
+    description: "Wind-down rituals and stories to help you rest.",
+    category: "Wellbeing",
+    icon: "sparkles",
+    accent: "bg-sun-soft text-sun-deep",
+  },
+  {
+    name: "Breathwork Circle",
+    description: "Five minutes a day to reset your nervous system.",
+    category: "Mindfulness",
+    icon: "wind",
+    accent: "bg-mint-soft text-mint-deep",
+  },
+  {
+    name: "Grief & Loss",
+    description: "A soft place to sit with loss — at your own pace.",
+    category: "Support",
+    icon: "cloudRain",
+    accent: "bg-lavender-soft text-lavender-deep",
+  },
+  {
+    name: "Self-Care Daily",
+    description: "Small habits, gentle reminders, one day at a time.",
+    category: "Wellbeing",
+    icon: "smile",
+    accent: "bg-blossom-soft text-blossom-deep",
+  },
+  {
+    name: "Meditation Pals",
+    description: "Guided sits and shared quiet — together is easier.",
+    category: "Mindfulness",
+    icon: "compass",
+    accent: "bg-mint-soft text-mint-deep",
+  },
+];
 
 async function ensureSeed() {
-  const count = await Community.estimatedDocumentCount();
-  if (count === 0) {
-    await Community.create(SEED_COMMUNITY);
+  const names = SEED_COMMUNITIES.map((c) => c.name);
+  const existing = await Community.find({ name: { $in: names } }).select(
+    "name"
+  );
+  const existingNames = new Set(existing.map((c) => c.name));
+  const missing = SEED_COMMUNITIES.filter((c) => !existingNames.has(c.name));
+  if (missing.length) {
+    await Community.insertMany(missing);
   }
 }
 

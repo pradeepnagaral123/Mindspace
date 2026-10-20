@@ -27,7 +27,6 @@ import Avatar from "../components/Avatar";
 import sittingWomen from "../images/sitting_women.png";
 import bannerImg from "../images/community-banner.jpg";
 import { useAuth } from "../context/AuthContext";
-import { communities } from "../data/mockData";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -46,41 +45,6 @@ const resourceRows = [
   { icon: NotebookPen, label: "Your journal", to: "/journal" },
 ];
 
-const hoursAgo = (hours) =>
-  new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
-
-const mockToCommunity = (community) => ({
-  _id: community.id,
-  name: community.name,
-  description: community.description,
-  category: community.category,
-  icon: community.icon,
-  accent: community.accent,
-  banner: community.banner,
-  memberCount: community.memberCount,
-  joinedByMe: false,
-  isMock: true,
-});
-
-const buildMockPosts = (community) =>
-  (community?.posts || []).map((post, index) => ({
-    _id: `mock-${community.id}-${index}`,
-    author: { _id: `mock-${community.id}-u${index}`, name: post.author },
-    text: post.text,
-    likeCount: post.likes,
-    likedByMe: false,
-    createdAt: hoursAgo(post.hours),
-  }));
-
-const buildMockMembers = (community) => {
-  const names = [...new Set((community?.posts || []).map((post) => post.author))];
-  return names.slice(0, 4).map((name, index) => ({
-    _id: `mock-${community.id}-m${index}`,
-    name,
-    role: "member",
-  }));
-};
-
 function timeAgo(dateStr) {  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);
@@ -96,13 +60,10 @@ export default function CommunityDetail() {
   const { id } = useParams();
   const { user, token } = useAuth();
   const navigate = useNavigate();
-  const mock = communities.find((item) => item.id === id);
-  const [community, setCommunity] = useState(
-    mock ? mockToCommunity(mock) : null
-  );
-  const [posts, setPosts] = useState(mock ? buildMockPosts(mock) : []);
-  const [members, setMembers] = useState(mock ? buildMockMembers(mock) : []);
-  const [loading, setLoading] = useState(!mock);
+  const [community, setCommunity] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [text, setText] = useState("");
@@ -115,10 +76,6 @@ export default function CommunityDetail() {
   const [copiedId, setCopiedId] = useState(null);
 
   const load = useCallback(async () => {
-    if (mock) {
-      setLoading(false);
-      return;
-    }
     if (!token) {
       setLoading(false);
       return;
@@ -151,7 +108,7 @@ export default function CommunityDetail() {
     } finally {
       setLoading(false);
     }
-  }, [id, token, mock]);
+  }, [id, token]);
 
   useEffect(() => {
     load();
@@ -195,15 +152,6 @@ export default function CommunityDetail() {
 
   const saveEdit = async (post) => {
     if (!editText.trim() || savingEdit) return;
-    if (post._id.startsWith("mock-")) {
-      setPosts((current) =>
-        current.map((item) =>
-          item._id === post._id ? { ...item, text: editText } : item
-        )
-      );
-      cancelEdit();
-      return;
-    }
     setSavingEdit(true);
     try {
       const res = await fetch(`${API_URL}/communities/posts/${post._id}`, {
@@ -233,10 +181,6 @@ export default function CommunityDetail() {
   const deletePost = async (post) => {
     setMenuOpenId(null);
     if (!window.confirm("Delete this post?")) return;
-    if (post._id.startsWith("mock-")) {
-      setPosts((current) => current.filter((item) => item._id !== post._id));
-      return;
-    }
     try {
       const res = await fetch(`${API_URL}/communities/posts/${post._id}`, {
         method: "DELETE",
@@ -252,14 +196,6 @@ export default function CommunityDetail() {
 
   const toggleJoin = async () => {
     if (!community) return;
-    if (community.isMock) {
-      setCommunity((current) => ({
-        ...current,
-        joinedByMe: !current.joinedByMe,
-        memberCount: current.memberCount + (current.joinedByMe ? -1 : 1),
-      }));
-      return;
-    }
     setToggling(true);
     try {
       const res = await fetch(
@@ -297,19 +233,6 @@ export default function CommunityDetail() {
   const submitPost = async (event) => {
     event.preventDefault();
     if (!text.trim() || posting) return;
-    if (community?.isMock) {
-      const newPost = {
-        _id: `mock-local-${Date.now()}`,
-        author: { _id: user?.id, name: user?.name || "You" },
-        text,
-        likeCount: 0,
-        likedByMe: false,
-        createdAt: new Date().toISOString(),
-      };
-      setPosts((current) => [newPost, ...current]);
-      setText("");
-      return;
-    }
     setPosting(true);
     try {
       const res = await fetch(`${API_URL}/communities/${id}/posts`, {
@@ -333,20 +256,6 @@ export default function CommunityDetail() {
   };
 
   const toggleLike = async (post) => {
-    if (post._id.startsWith("mock-")) {
-      setPosts((current) =>
-        current.map((item) =>
-          item._id === post._id
-            ? {
-                ...item,
-                likedByMe: !item.likedByMe,
-                likeCount: item.likeCount + (item.likedByMe ? -1 : 1),
-              }
-            : item
-        )
-      );
-      return;
-    }
     const previous = post.likedByMe;
     setPosts((current) =>
       current.map((item) =>
