@@ -88,7 +88,7 @@ router.post("/", auth, async (req, res) => {
     await CommunityMember.create({
       community: community._id,
       user: req.user._id,
-      role: "admin",
+      role: "owner",
     });
     res.status(201).json({
       community: shapeCommunity(community, 1, true),
