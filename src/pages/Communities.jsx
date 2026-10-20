@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Check, Plus, Search, Users } from "lucide-react";
 import Card from "../components/Card";
 import Icon from "../components/icons";
+import CreateCommunityModal from "../components/CreateCommunityModal";
 import { useSearch } from "../context/SearchContext";
 import { useAuth } from "../context/AuthContext";
 import { communities as communityData } from "../data/mockData";
@@ -18,6 +19,9 @@ export default function Communities() {
   const [real, setReal] = useState(null);
   const [joined, setJoined] = useState({});
   const [togglingId, setTogglingId] = useState(null);
+  const [created, setCreated] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
   const { query, setQuery } = useSearch();
 
   const load = useCallback(async () => {
@@ -41,19 +45,22 @@ export default function Communities() {
 
   const term = query.trim().toLowerCase();
 
-  const cards = communityData.map((community) => {
-    if (community.id === "student-support" && real) {
-      return {
-        ...community,
-        realId: real._id,
-        name: real.name,
-        description: real.description,
-        members: String(real.memberCount),
-        joined: real.joinedByMe,
-      };
-    }
-    return community;
-  });
+  const cards = [
+    ...created,
+    ...communityData.map((community) => {
+      if (community.id === "student-support" && real) {
+        return {
+          ...community,
+          realId: real._id,
+          name: real.name,
+          description: real.description,
+          members: String(real.memberCount),
+          joined: real.joinedByMe,
+        };
+      }
+      return community;
+    }),
+  ];
 
   const visible = cards.filter((community) => {
     const matchesTab = activeTab === "All" || community.category === activeTab;
@@ -109,6 +116,49 @@ export default function Communities() {
     }
   };
 
+  const createCommunity = async (payload) => {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    setCreating(true);
+    try {
+      const res = await fetch(`${API_URL}/communities`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = res.ok ? await res.json() : null;
+      if (data?.community) {
+        const c = data.community;
+        setCreated((current) => [
+          {
+            id: c._id,
+            realId: c._id,
+            name: c.name,
+            description: c.description,
+            category: c.category,
+            icon: c.icon,
+            accent: c.accent,
+            members: String(c.memberCount),
+            joined: c.joinedByMe,
+          },
+          ...current,
+        ]);
+        setModalOpen(false);
+        setActiveTab("All");
+        navigate(`/communities/${c._id}`);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setCreating(false);
+    }
+  };
+
   return (
     <div className="space-y-6 lg:space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -121,7 +171,10 @@ export default function Communities() {
             you're going through.
           </p>
         </div>
-        <button className="flex items-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-2">
+        <button
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-2"
+        >
           <Plus size={16} />
           Create Community
         </button>
@@ -235,12 +288,22 @@ export default function Communities() {
               </p>
             </div>
           </div>
-          <button className="flex items-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-[13px] font-semibold text-navy transition-colors hover:bg-navy hover:text-white">
+          <button
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-2 rounded-xl border border-navy/20 bg-white px-4 py-2.5 text-[13px] font-semibold text-navy transition-colors hover:bg-navy hover:text-white"
+          >
             <Plus size={15} />
             Start your own
           </button>
         </div>
       </Card>
+
+      <CreateCommunityModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmit={createCommunity}
+        submitting={creating}
+      />
     </div>
   );
 }

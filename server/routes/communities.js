@@ -68,6 +68,37 @@ router.get("/", auth, async (req, res) => {
   }
 });
 
+router.post("/", auth, async (req, res) => {
+  try {
+    const { name, description, category, icon, accent } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Community name is required" });
+    }
+    const community = await Community.create({
+      name: name.trim().slice(0, 80),
+      description: (description || "").trim().slice(0, 300),
+      category:
+        ["Support", "Wellbeing", "Mindfulness"].includes(category)
+          ? category
+          : "Support",
+      icon: icon || "graduationCap",
+      accent: accent || "bg-mint-soft text-mint-deep",
+      createdBy: req.user._id,
+    });
+    await CommunityMember.create({
+      community: community._id,
+      user: req.user._id,
+      role: "admin",
+    });
+    res.status(201).json({
+      community: shapeCommunity(community, 1, true),
+    });
+  } catch (error) {
+    console.error("Create community error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 router.get("/:id", auth, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
