@@ -182,6 +182,7 @@ export default function Communities() {
 
                 <button
                   onClick={() => openCommunity(community)}
+                  className="mt-4 text-left text-base font-extrabold text-ink group-hover:text-mint-deep"
                 >
                   {community.name}
                 </button>
