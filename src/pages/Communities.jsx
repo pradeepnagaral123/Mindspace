@@ -174,15 +174,9 @@ export default function Communities() {
                 key={community.id}
                 className="group flex flex-col p-5 transition-shadow hover:shadow-md"
               >
-                <span
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl ${community.accent}`}
-                >
-                  <Icon name={community.icon} size={22} strokeWidth={2} />
-                </span>
-
                 <button
                   onClick={() => openCommunity(community)}
-                  className="mt-4 text-left text-base font-extrabold text-ink group-hover:text-mint-deep"
+                  className="text-left text-base font-extrabold text-ink group-hover:text-mint-deep"
                 >
                   {community.name}
                 </button>
