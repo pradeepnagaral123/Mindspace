@@ -5,54 +5,6 @@ export const user = {
   role: "Student · Final Year",
 };
 
-export const moodOptions = [
-  {
-    id: "great",
-    label: "Great",
-    icon: "sparkles",
-    circle: "bg-mint-soft",
-    text: "text-mint-deep",
-    ring: "ring-mint-deep",
-    hint: "Feeling light, present and grounded.",
-  },
-  {
-    id: "good",
-    label: "Good",
-    icon: "smile",
-    circle: "bg-lavender-soft",
-    text: "text-lavender-deep",
-    ring: "ring-lavender-deep",
-    hint: "Mostly okay, with a few ups and downs.",
-  },
-  {
-    id: "okay",
-    label: "Okay",
-    icon: "meh",
-    circle: "bg-sun-soft",
-    text: "text-sun-deep",
-    ring: "ring-sun-deep",
-    hint: "Neutral — taking it one moment at a time.",
-  },
-  {
-    id: "low",
-    label: "Low",
-    icon: "frown",
-    circle: "bg-peach-soft",
-    text: "text-peach-deep",
-    ring: "ring-peach-deep",
-    hint: "A little heavy today. That's okay too.",
-  },
-  {
-    id: "struggling",
-    label: "Struggling",
-    icon: "cloudRain",
-    circle: "bg-blossom-soft",
-    text: "text-blossom-deep",
-    ring: "ring-blossom-deep",
-    hint: "Things feel hard right now. We're here.",
-  },
-];
-
 export const connections = [
   {
     id: "c1",
@@ -174,12 +126,6 @@ export const feedPosts = [
       text: "Trying this tonight, thank you! Mine is a warm cup of chamomile and a guided sleep meditation. Small rituals, big difference.",
     },
   },
-];
-
-export const checkInMetrics = [
-  { label: "Stress", value: 2, max: 5, color: "bg-mint" },
-  { label: "Energy", value: 3, max: 5, color: "bg-sun" },
-  { label: "Mood", value: 4, max: 5, color: "bg-lavender" },
 ];
 
 export const quote = {

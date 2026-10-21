@@ -1,13 +1,21 @@
 import { useState, useEffect } from "react";
-import { moodOptions } from "../data/mockData";
+import { moodOptions } from "../data/checkInConfig";
 import Icon from "./icons";
 import { useAuth } from "../context/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function MoodCheckIn({ className = "", onCheckIn }) {
+export default function MoodCheckIn({
+  className = "",
+  onCheckIn,
+  value,
+  onChange,
+  loadLatest = true,
+}) {
   const { user, token } = useAuth();
-  const [selected, setSelected] = useState("good");
+  const [internal, setInternal] = useState(null);
+  const controlled = value !== undefined;
+  const selected = controlled ? value : internal;
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -19,19 +27,20 @@ export default function MoodCheckIn({ className = "", onCheckIn }) {
   const firstName = user?.name?.split(" ")[0] || "there";
 
   useEffect(() => {
-    if (!token) return;
+    if (!loadLatest || controlled || !token) return;
     fetch(`${API_URL}/moods/latest`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.ok && r.json())
       .then((data) => {
-        if (data?.mood) setSelected(data.mood.mood);
+        if (data?.mood) setInternal(data.mood.mood);
       })
       .catch(() => {});
-  }, [token]);
+  }, [token, loadLatest, controlled]);
 
   const handleSelect = (id) => {
-    setSelected(id);
+    if (!controlled) setInternal(id);
+    onChange?.(id);
     onCheckIn?.(id);
   };
 
@@ -87,9 +96,11 @@ export default function MoodCheckIn({ className = "", onCheckIn }) {
         })}
       </div>
 
-      <p className="relative mt-3 text-[11px] text-muted/70">
-        {moodOptions.find((option) => option.id === selected)?.hint}
-      </p>
+      {selected && (
+        <p className="relative mt-3 text-[11px] text-muted/70">
+          {moodOptions.find((option) => option.id === selected)?.hint}
+        </p>
+      )}
     </div>
   );
 }

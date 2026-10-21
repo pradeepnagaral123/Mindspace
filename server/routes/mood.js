@@ -1,12 +1,26 @@
 import express from "express";
 import Mood from "../models/Mood.js";
 import auth from "../middleware/auth.js";
+import {
+  buildStats,
+  buildStreak,
+  clamp,
+  dateKey,
+  scoreOf,
+  startOfLocalDay,
+  weekdayLabel,
+} from "../utils/moodStats.js";
 
 const router = express.Router();
 
+const readTz = (req) => {
+  const tz = Number(req.query.tz);
+  return Number.isFinite(tz) ? tz : 0;
+};
+
 router.post("/", auth, async (req, res) => {
   try {
-    const { mood, stress, energy, note } = req.body;
+    const { mood, stress, energy, moodScore, note } = req.body;
     if (!mood) {
       return res.status(400).json({ message: "Mood is required" });
     }
@@ -15,6 +29,7 @@ router.post("/", auth, async (req, res) => {
       mood,
       stress,
       energy,
+      moodScore,
       note,
     });
     res.status(201).json({ mood: entry });
@@ -38,40 +53,57 @@ router.get("/latest", auth, async (req, res) => {
 
 router.get("/stats", auth, async (req, res) => {
   try {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const moods = await Mood.find({
-      user: req.user._id,
-      createdAt: { $gte: sevenDaysAgo },
-    }).sort({ createdAt: -1 });
-
-    const moodScoreMap = {
-      great: 5,
-      good: 4,
-      okay: 3,
-      low: 2,
-      struggling: 1,
-    };
-
-    const avg =
-      moods.length > 0
-        ? moods.reduce((sum, m) => sum + (moodScoreMap[m.mood] || 3), 0) /
-          moods.length
-        : 3;
-
-    const stress = Math.round(6 - avg);
-    const energy = Math.round(avg * 0.8 + Math.random());
-    const mood = Math.round(avg);
-
-    res.json({
-      stress: Math.min(5, Math.max(1, stress)),
-      energy: Math.min(5, Math.max(1, energy)),
-      mood: Math.min(5, Math.max(1, mood)),
-      totalCheckIns: moods.length,
+    const tz = readTz(req);
+    const entries = await Mood.find({ user: req.user._id }).sort({
+      createdAt: -1,
     });
+    res.json(buildStats(entries, tz));
   } catch (error) {
     console.error("Get mood stats error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/overview", auth, async (req, res) => {
+  try {
+    const tz = readTz(req);
+    const entries = await Mood.find({ user: req.user._id }).sort({
+      createdAt: -1,
+    });
+
+    const byDay = new Map();
+    for (const entry of entries) {
+      const key = dateKey(entry.createdAt, tz);
+      if (!byDay.has(key)) byDay.set(key, entry);
+    }
+
+    const days = [];
+    const today = startOfLocalDay(new Date(), tz);
+    for (let offset = 13; offset >= 0; offset--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - offset);
+      const entry = byDay.get(dateKey(date, tz));
+      days.push({
+        date: dateKey(date, tz),
+        day: weekdayLabel(date, tz),
+        hasEntry: Boolean(entry),
+        mood: entry?.mood || null,
+        value: entry ? clamp(scoreOf(entry), 1, 5) : 0,
+        stress: entry?.stress ?? null,
+        energy: entry?.energy ?? null,
+        moodScore: entry?.moodScore ?? null,
+      });
+    }
+
+    res.json({
+      stats: buildStats(entries, tz),
+      days,
+      streak: buildStreak(byDay.keys(), tz),
+      latest: entries[0] || null,
+      entries,
+    });
+  } catch (error) {
+    console.error("Get mood overview error:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 });

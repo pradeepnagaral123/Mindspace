@@ -14,6 +14,7 @@ const moodSchema = new mongoose.Schema(
     },
     stress: { type: Number, min: 1, max: 5, default: 3 },
     energy: { type: Number, min: 1, max: 5, default: 3 },
+    moodScore: { type: Number, min: 1, max: 5 },
     note: { type: String, default: "" },
   },
   { timestamps: true }
