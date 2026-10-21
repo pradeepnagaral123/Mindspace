@@ -17,7 +17,11 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function CheckInCalendar({ className = "", refreshKey = 0 }) {
+export default function CheckInCalendar({
+  className = "",
+  refreshKey = 0,
+  compact = false,
+}) {
   const { token } = useAuth();
   const [monthKey, setMonthKey] = useState(() => currentMonthKey());
   const [calendar, setCalendar] = useState(null);
