@@ -107,11 +107,24 @@ export default function CheckInCalendar({
 
   const monthLabel = formatMonthLabel(monthKey);
 
+  const navButton = `flex items-center justify-center rounded-xl border border-line bg-white text-ink transition-colors hover:border-mint-deep hover:bg-mint-soft ${
+    compact ? "h-7 w-7" : "h-8 w-8"
+  }`;
+
   return (
-    <Card className={`flex flex-col p-5 ${className}`}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <Card className={`flex flex-col ${compact ? "p-4" : "p-5"} ${className}`}>
+      <div
+        className={
+          compact
+            ? "flex flex-col gap-2.5"
+            : "flex flex-wrap items-center justify-between gap-3"
+        }
+      >
         <div className="flex items-center gap-2">
-          <CalendarHeart size={17} className="text-mint-deep" />
+          <CalendarHeart
+            size={compact ? 15 : 17}
+            className="text-mint-deep"
+          />
           <h3 className="text-[15px] font-bold text-ink">Your calendar</h3>
         </div>
         <div className="flex items-center gap-1.5">
@@ -119,26 +132,32 @@ export default function CheckInCalendar({
             type="button"
             onClick={() => goToMonth(-1)}
             aria-label="Previous month"
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-line bg-white text-ink transition-colors hover:border-mint-deep hover:bg-mint-soft"
+            className={navButton}
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={compact ? 14 : 16} />
           </button>
-          <span className="min-w-[130px] text-center text-[13px] font-bold text-ink">
+          <span
+            className={`text-center font-bold text-ink ${
+              compact ? "min-w-[88px] text-[12px]" : "min-w-[130px] text-[13px]"
+            }`}
+          >
             {monthLabel}
           </span>
           <button
             type="button"
             onClick={() => goToMonth(1)}
             aria-label="Next month"
-            className="flex h-8 w-8 items-center justify-center rounded-xl border border-line bg-white text-ink transition-colors hover:border-mint-deep hover:bg-mint-soft"
+            className={navButton}
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={compact ? 14 : 16} />
           </button>
           <button
             type="button"
             onClick={() => setMonthKey(currentMonthKey())}
             disabled={isCurrentMonth}
-            className="ml-1 rounded-xl border border-line bg-white px-3 py-1.5 text-[12px] font-semibold text-ink transition-colors hover:border-mint-deep hover:bg-mint-soft disabled:opacity-40 disabled:hover:border-line disabled:hover:bg-white"
+            className={`ml-1 rounded-xl border border-line bg-white font-semibold text-ink transition-colors hover:border-mint-deep hover:bg-mint-soft disabled:opacity-40 disabled:hover:border-line disabled:hover:bg-white ${
+              compact ? "px-2 py-1 text-[11px]" : "px-3 py-1.5 text-[12px]"
+            }`}
           >
             Today
           </button>
@@ -151,13 +170,23 @@ export default function CheckInCalendar({
         </p>
       )}
 
-      <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_240px]">
+      <div
+        className={
+          compact
+            ? "mt-3 grid gap-3"
+            : "mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_240px]"
+        }
+      >
         <div>
-          <div className="grid grid-cols-7 gap-1.5">
+          <div
+            className={`grid grid-cols-7 ${compact ? "gap-1" : "gap-1.5"}`}
+          >
             {WEEKDAYS.map((label) => (
               <span
                 key={label}
-                className="pb-1 text-center text-[10px] font-bold tracking-wide text-muted/70 uppercase"
+                className={`pb-1 text-center font-bold tracking-wide text-muted/70 uppercase ${
+                  compact ? "text-[9px]" : "text-[10px]"
+                }`}
               >
                 {label}
               </span>
@@ -165,16 +194,18 @@ export default function CheckInCalendar({
           </div>
 
           {loading && days.length === 0 ? (
-            <div className="grid grid-cols-7 gap-1.5">
+            <div className={`grid grid-cols-7 ${compact ? "gap-1" : "gap-1.5"}`}>
               {Array.from({ length: 35 }).map((_, index) => (
                 <span
                   key={index}
-                  className="h-12 animate-pulse rounded-xl bg-cream"
+                  className={`animate-pulse rounded-xl bg-cream ${
+                    compact ? "h-9" : "h-12"
+                  }`}
                 />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-7 gap-1.5">
+            <div className={`grid grid-cols-7 ${compact ? "gap-1" : "gap-1.5"}`}>
               {days.map((day) => {
                 const option = day.hasEntry ? moodOptionFor(day.mood) : null;
                 const isToday = day.date === todayKey;
@@ -190,7 +221,9 @@ export default function CheckInCalendar({
                       day.hasEntry ? ` — ${option.label}` : " — no check-in"
                     }`}
                     aria-pressed={isSelected}
-                    className={`flex h-12 flex-col items-center justify-center gap-0.5 rounded-xl border text-[12px] font-semibold transition-all ${
+                    className={`flex flex-col items-center justify-center rounded-xl border transition-all ${
+                      compact ? "h-9 gap-0 text-[11px]" : "h-12 gap-0.5 text-[12px]"
+                    } ${
                       isSelected
                         ? "border-mint-deep bg-mint-soft text-ink shadow-[0_2px_8px_rgba(47,174,127,0.18)]"
                         : "border-transparent bg-white text-ink hover:border-line hover:bg-cream"
@@ -201,10 +234,18 @@ export default function CheckInCalendar({
                     <span
                       className={`leading-none ${
                         isToday
-                          ? "flex h-5 w-5 items-center justify-center rounded-full bg-navy text-[11px] text-white"
+                          ? `flex items-center justify-center rounded-full bg-navy text-white ${
+                              compact
+                                ? "h-4 w-4 text-[10px]"
+                                : "h-5 w-5 text-[11px]"
+                            }`
                           : isSelected
-                            ? "text-[13px]"
-                            : "text-[12px]"
+                            ? compact
+                              ? "text-[12px]"
+                              : "text-[13px]"
+                            : compact
+                              ? "text-[11px]"
+                              : "text-[12px]"
                       }`}
                     >
                       {day.dayOfMonth}
@@ -212,12 +253,16 @@ export default function CheckInCalendar({
                     {day.hasEntry ? (
                       <Icon
                         name={option.icon}
-                        size={13}
+                        size={compact ? 11 : 13}
                         strokeWidth={1.9}
                         className={option.text}
                       />
                     ) : (
-                      <span className="h-[13px] w-[13px] rounded-full border border-dashed border-line" />
+                      <span
+                        className={`rounded-full border border-dashed border-line ${
+                          compact ? "h-[11px] w-[11px]" : "h-[13px] w-[13px]"
+                        }`}
+                      />
                     )}
                   </button>
                 );
@@ -225,11 +270,15 @@ export default function CheckInCalendar({
             </div>
           )}
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <div
+            className={`flex flex-wrap ${compact ? "mt-2.5 gap-x-2 gap-y-1" : "mt-4 gap-x-3 gap-y-1.5"}`}
+          >
             {moodOptions.map((option) => (
               <span
                 key={option.id}
-                className="flex items-center gap-1.5 text-[11px] font-medium text-muted"
+                className={`flex items-center gap-1.5 font-medium text-muted ${
+                  compact ? "text-[10px]" : "text-[11px]"
+                }`}
               >
                 <span
                   className={`h-2 w-2 rounded-full ${option.bar}`}
@@ -242,47 +291,97 @@ export default function CheckInCalendar({
         </div>
 
         <div className="flex flex-col gap-3">
-          <div className="rounded-2xl bg-cream p-4">
-            <p className="text-[11px] font-bold tracking-wide text-muted/70 uppercase">
-              This month
-            </p>
-            <p className="mt-1 font-display text-3xl font-semibold text-ink">
-              {summary?.checkIns ?? 0}
-            </p>
-            <p className="text-[12px] text-muted">
-              check-in{summary?.checkIns === 1 ? "" : "s"} across{" "}
-              {summary?.daysLogged ?? 0} day
-              {summary?.daysLogged === 1 ? "" : "s"}
-            </p>
-            {summary?.avgMood != null && (
-              <div className="mt-3 border-t border-line pt-3">
-                <p className="text-[12px] text-muted">
-                  Average mood{" "}
-                  <span className="font-bold text-ink">
-                    {summary.avgMood.toFixed(1)}/5
-                  </span>
+          {compact ? (
+            <div className="rounded-2xl bg-cream p-3">
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-[10px] font-bold tracking-wide text-muted/70 uppercase">
+                  This month
                 </p>
-                {summary?.avgStress != null && (
-                  <p className="mt-0.5 text-[12px] text-muted">
-                    Average stress{" "}
-                    <span className="font-bold text-ink">
-                      {summary.avgStress.toFixed(1)}/5
-                    </span>
-                  </p>
-                )}
-                {summary?.avgEnergy != null && (
-                  <p className="mt-0.5 text-[12px] text-muted">
-                    Average energy{" "}
-                    <span className="font-bold text-ink">
-                      {summary.avgEnergy.toFixed(1)}/5
-                    </span>
-                  </p>
-                )}
+                <p className="font-display text-xl font-semibold text-ink">
+                  {summary?.checkIns ?? 0}
+                </p>
               </div>
-            )}
-          </div>
+              <p className="text-[11px] text-muted">
+                check-in{summary?.checkIns === 1 ? "" : "s"} across{" "}
+                {summary?.daysLogged ?? 0} day
+                {summary?.daysLogged === 1 ? "" : "s"}
+              </p>
+              {summary?.avgMood != null && (
+                <div className="mt-2.5 grid grid-cols-3 gap-1 border-t border-line pt-2.5">
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold tracking-wide text-muted/70 uppercase">
+                      Mood
+                    </p>
+                    <p className="text-[12px] font-bold text-ink">
+                      {summary.avgMood.toFixed(1)}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold tracking-wide text-muted/70 uppercase">
+                      Stress
+                    </p>
+                    <p className="text-[12px] font-bold text-ink">
+                      {summary.avgStress != null
+                        ? summary.avgStress.toFixed(1)
+                        : "—"}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold tracking-wide text-muted/70 uppercase">
+                      Energy
+                    </p>
+                    <p className="text-[12px] font-bold text-ink">
+                      {summary.avgEnergy != null
+                        ? summary.avgEnergy.toFixed(1)
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-cream p-4">
+              <p className="text-[11px] font-bold tracking-wide text-muted/70 uppercase">
+                This month
+              </p>
+              <p className="mt-1 font-display text-3xl font-semibold text-ink">
+                {summary?.checkIns ?? 0}
+              </p>
+              <p className="text-[12px] text-muted">
+                check-in{summary?.checkIns === 1 ? "" : "s"} across{" "}
+                {summary?.daysLogged ?? 0} day
+                {summary?.daysLogged === 1 ? "" : "s"}
+              </p>
+              {summary?.avgMood != null && (
+                <div className="mt-3 border-t border-line pt-3">
+                  <p className="text-[12px] text-muted">
+                    Average mood{" "}
+                    <span className="font-bold text-ink">
+                      {summary.avgMood.toFixed(1)}/5
+                    </span>
+                  </p>
+                  {summary?.avgStress != null && (
+                    <p className="mt-0.5 text-[12px] text-muted">
+                      Average stress{" "}
+                      <span className="font-bold text-ink">
+                        {summary.avgStress.toFixed(1)}/5
+                      </span>
+                    </p>
+                  )}
+                  {summary?.avgEnergy != null && (
+                    <p className="mt-0.5 text-[12px] text-muted">
+                      Average energy{" "}
+                      <span className="font-bold text-ink">
+                        {summary.avgEnergy.toFixed(1)}/5
+                      </span>
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
-          <div className="rounded-2xl border border-line p-4">
+          <div className={`rounded-2xl border border-line ${compact ? "p-3" : "p-4"}`}>
             <p className="text-[11px] font-bold tracking-wide text-muted/70 uppercase">
               {selected ? formatDateKey(selected.date) : "Select a day"}
             </p>
@@ -290,11 +389,13 @@ export default function CheckInCalendar({
               <div className="mt-2">
                 <div className="flex items-center gap-2.5">
                   <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-full ${moodOptionFor(selected.mood).circle}`}
+                    className={`flex items-center justify-center rounded-full ${moodOptionFor(selected.mood).circle} ${
+                      compact ? "h-8 w-8" : "h-9 w-9"
+                    }`}
                   >
                     <Icon
                       name={moodOptionFor(selected.mood).icon}
-                      size={17}
+                      size={compact ? 15 : 17}
                       className={moodOptionFor(selected.mood).text}
                     />
                   </span>

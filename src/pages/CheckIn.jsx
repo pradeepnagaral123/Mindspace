@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarHeart, Check, PenLine } from "lucide-react";
+import { CalendarHeart, Check, PenLine, Sparkles } from "lucide-react";
 import Card from "../components/Card";
 import MoodCheckIn from "../components/MoodCheckIn";
 import CheckInCalendar from "../components/CheckInCalendar";
@@ -268,37 +268,44 @@ export default function CheckIn() {
           </div>
         </Card>
 
-        <Card className="flex flex-col p-5">
-          <div>
-            <h3 className="text-[15px] font-bold text-ink">
-              Journaling prompt
-            </h3>
-            <p className="mt-1 font-display text-base text-ink/80 italic">
+        <CheckInCalendar
+          className="lg:col-span-1"
+          compact
+          refreshKey={calendarVersion}
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+        <Card className="flex flex-col gap-4 p-5 lg:col-span-3 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <Sparkles size={16} className="text-lavender-deep" />
+              <h3 className="text-[15px] font-bold text-ink">
+                Journaling prompt
+              </h3>
+            </div>
+            <p className="mt-1.5 font-display text-lg text-ink/80 italic">
               {reflectionPrompts[reflection % reflectionPrompts.length]}
             </p>
           </div>
-          <div className="mt-4 flex flex-col items-start gap-2">
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
             <button
               onClick={() =>
                 setReflection((value) => (value + 1) % reflectionPrompts.length)
               }
-              className="w-full rounded-xl border border-line bg-white px-3.5 py-2 text-[12.5px] font-semibold text-ink transition-colors hover:bg-cream"
+              className="rounded-xl border border-line bg-white px-3.5 py-2 text-[12.5px] font-semibold text-ink transition-colors hover:bg-cream"
             >
               Another prompt
             </button>
             <button
               onClick={() => navigate("/journal")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-navy-2"
+              className="flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-navy-2"
             >
               <PenLine size={15} />
               Write it down
             </button>
           </div>
         </Card>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
-        <CheckInCalendar className="lg:col-span-3" refreshKey={calendarVersion} />
       </div>
 
       <div>
