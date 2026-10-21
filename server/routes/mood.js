@@ -2,6 +2,7 @@ import express from "express";
 import Mood from "../models/Mood.js";
 import auth from "../middleware/auth.js";
 import {
+  buildMonthCalendar,
   buildStats,
   buildStreak,
   clamp,
@@ -104,6 +105,28 @@ router.get("/overview", auth, async (req, res) => {
     });
   } catch (error) {
     console.error("Get mood overview error:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/calendar", auth, async (req, res) => {
+  try {
+    const tz = readTz(req);
+    const now = new Date();
+    const currentKey = dateKey(now, tz);
+    const requested = String(req.query.month || "").trim();
+    const match = /^(\d{4})-(\d{2})$/.exec(requested);
+    const year = match ? Number(match[1]) : Number(currentKey.slice(0, 4));
+    const month = match ? Number(match[2]) : Number(currentKey.slice(5, 7));
+    if (month < 1 || month > 12) {
+      return res.status(400).json({ message: "Invalid month" });
+    }
+    const entries = await Mood.find({ user: req.user._id }).sort({
+      createdAt: -1,
+    });
+    res.json(buildMonthCalendar(entries, tz, year, month));
+  } catch (error) {
+    console.error("Get mood calendar error:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 });

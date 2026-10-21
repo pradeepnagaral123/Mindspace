@@ -7,6 +7,49 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 // Minutes east of UTC, so the API can bucket days in the user's timezone.
 export const timezoneOffset = () => -new Date().getTimezoneOffset();
 
+const pad2 = (value) => String(value).padStart(2, "0");
+
+// Local calendar day for a timestamp, matching the server's tz-shifted buckets.
+export const dateKeyFor = (date) => {
+  const d = date instanceof Date ? date : new Date(date);
+  const shifted = new Date(d.getTime() + timezoneOffset() * 60000);
+  return `${shifted.getUTCFullYear()}-${pad2(shifted.getUTCMonth() + 1)}-${pad2(shifted.getUTCDate())}`;
+};
+
+// "YYYY-MM" key for the month a day belongs to.
+export const monthKeyFor = (date) => dateKeyFor(date).slice(0, 7);
+
+export const currentMonthKey = () => monthKeyFor(new Date());
+
+export const shiftMonthKey = (monthKey, delta) => {
+  const [year, month] = monthKey.split("-").map(Number);
+  const shifted = new Date(Date.UTC(year, month - 1 + delta, 1));
+  return `${shifted.getUTCFullYear()}-${pad2(shifted.getUTCMonth() + 1)}`;
+};
+
+export const formatMonthLabel = (monthKey) => {
+  const [year, month] = monthKey.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+};
+
+// Turns a "YYYY-MM-DD" key into a Date anchored to local noon, so
+// toLocaleDateString never rolls the day over on either side of UTC.
+export const dateFromKey = (key) => {
+  const [year, month, day] = key.split("-").map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0);
+};
+
+export const formatDateKey = (key) =>
+  dateFromKey(key).toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+
 export const formatRelativeDate = (dateStr) => {
   const date = new Date(dateStr);
   const now = new Date();

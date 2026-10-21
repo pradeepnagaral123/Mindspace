@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { CalendarHeart, Check, PenLine } from "lucide-react";
 import Card from "../components/Card";
 import MoodCheckIn from "../components/MoodCheckIn";
+import CheckInCalendar from "../components/CheckInCalendar";
 import {
-  CHART_DAYS,
   RECENT_CHECK_IN_LIMIT,
   checkInMetrics,
   moodOptionFor,
@@ -33,6 +33,7 @@ export default function CheckIn() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [reflection, setReflection] = useState(0);
+  const [calendarVersion, setCalendarVersion] = useState(0);
 
   const fetchOverview = useCallback(async () => {
     if (!token) return null;
@@ -72,13 +73,8 @@ export default function CheckIn() {
     };
   }, [token, fetchOverview]);
 
-  const stats = overview?.stats ?? null;
   const streak = overview?.streak ?? { current: 0, longest: 0 };
   const days = overview?.days ?? [];
-  const chartDays = useMemo(
-    () => days.slice(-CHART_DAYS),
-    [days],
-  );
   const recent = useMemo(
     () => (overview?.entries ?? []).slice(0, RECENT_CHECK_IN_LIMIT),
     [overview],
@@ -124,6 +120,7 @@ export default function CheckIn() {
       } catch {
         // the check-in saved fine; only the refresh failed
       }
+      setCalendarVersion((version) => version + 1);
     } catch {
       setSaveError("Couldn't save your check-in. Please try again.");
     } finally {
@@ -272,53 +269,6 @@ export default function CheckIn() {
         </Card>
 
         <Card className="flex flex-col p-5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-[15px] font-bold text-ink">
-              This week at a glance
-            </h3>
-            {stats?.thisWeek > 0 && (
-              <span className="rounded-full bg-cream px-2.5 py-0.5 text-[11px] font-semibold text-muted">
-                {stats.thisWeek} check-in{stats.thisWeek === 1 ? "" : "s"}
-              </span>
-            )}
-          </div>
-          <div className="mt-4 flex flex-1 items-end justify-between gap-2">
-            {chartDays.map((day) => {
-              const option = moodOptionFor(day.mood);
-              return (
-                <div
-                  key={day.date}
-                  className="flex flex-1 flex-col items-center gap-2"
-                >
-                  {day.hasEntry ? (
-                    <Icon
-                      name={option.icon}
-                      size={16}
-                      className={option.text}
-                    />
-                  ) : (
-                    <span className="h-4 w-4 rounded-full border border-dashed border-line" />
-                  )}
-                  <span className="h-24 w-full max-w-[18px] rounded-full bg-cream">
-                    {day.hasEntry && (
-                      <span
-                        className={`block w-full rounded-full ${option.bar}`}
-                        style={{ height: `${(day.value / 5) * 100}%` }}
-                      />
-                    )}
-                  </span>
-                  <span className="text-[11px] font-medium text-muted">
-                    {day.day}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      </div>
-
-      <Card className="p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h3 className="text-[15px] font-bold text-ink">
               Journaling prompt
@@ -327,25 +277,29 @@ export default function CheckIn() {
               {reflectionPrompts[reflection % reflectionPrompts.length]}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="mt-4 flex flex-col items-start gap-2">
             <button
               onClick={() =>
                 setReflection((value) => (value + 1) % reflectionPrompts.length)
               }
-              className="rounded-xl border border-line bg-white px-3.5 py-2 text-[12.5px] font-semibold text-ink transition-colors hover:bg-cream"
+              className="w-full rounded-xl border border-line bg-white px-3.5 py-2 text-[12.5px] font-semibold text-ink transition-colors hover:bg-cream"
             >
               Another prompt
             </button>
             <button
               onClick={() => navigate("/journal")}
-              className="flex items-center gap-2 rounded-xl bg-navy px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-navy-2"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-navy-2"
             >
               <PenLine size={15} />
               Write it down
             </button>
           </div>
-        </div>
-      </Card>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+        <CheckInCalendar className="lg:col-span-3" refreshKey={calendarVersion} />
+      </div>
 
       <div>
         <div className="mb-3 flex items-center justify-between">
