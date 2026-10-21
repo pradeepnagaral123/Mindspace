@@ -23,7 +23,7 @@ const mainNav = [
   { to: "/dashboard", label: "Home", icon: Home },
   { to: "/communities", label: "Communities", icon: Users },
   { to: "/find-a-peer", label: "Find a Peer", icon: UserPlus },
-  { to: "/messages", label: "Messages", icon: MessageCircle, badge: 3 },
+  { to: "/messages", label: "Messages", icon: MessageCircle },
   { to: "/check-in", label: "Check-in", icon: ClipboardList },
   { to: "/resources", label: "Resources", icon: BookOpen },
   { to: "/journal", label: "Journal", icon: PenLine },
@@ -35,7 +35,7 @@ const supportNav = [
   { to: "/safety", label: "Safety", icon: ShieldCheck },
 ];
 
-function NavItem({ to, label, icon: Icon, badge, onClick }) {
+function NavItem({ to, label, icon: Icon, onClick }) {
   return (
     <NavLink
       to={to}
@@ -50,11 +50,6 @@ function NavItem({ to, label, icon: Icon, badge, onClick }) {
     >
       <Icon size={19} strokeWidth={2} />
       <span className="flex-1">{label}</span>
-      {badge && (
-        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blossom px-1.5 text-[11px] font-semibold text-white">
-          {badge}
-        </span>
-      )}
     </NavLink>
   );
 }
