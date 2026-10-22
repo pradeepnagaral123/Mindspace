@@ -200,16 +200,41 @@ router.get(
 router.get("/google/callback", (req, res, next) => {
   passport.authenticate(
     "google",
-    { session: false, failureRedirect: `${CLIENT_URL}/?auth=failed` },
-    (error, user) => {
-      if (error || !user) {
-        return res.redirect(`${CLIENT_URL}/?auth=failed`);
+    { session: false, failureRedirect: `${CLIENT_URL}/?auth=failed&reason=denied` },
+    (error, user, info) => {
+      if (error) {
+        // Without this the real reason (redirect_uri_mismatch, invalid_client,
+        // invalid_grant, ...) is swallowed and the user only sees a generic
+        // "Google sign-in failed" message.
+        let reason = error.code || error.name || "unknown";
+        if (error.oauthError?.data) {
+          try {
+            const parsed = JSON.parse(error.oauthError.data);
+            if (parsed.error) reason = parsed.error;
+          } catch {
+            // keep the fallback reason
+          }
+        }
+        console.error(
+          `Google OAuth callback failed (${reason}): ${error.message}`,
+          info || "",
+        );
+        return res.redirect(
+          `${CLIENT_URL}/?auth=failed&reason=${encodeURIComponent(reason)}`,
+        );
+      }
+      if (!user) {
+        console.error(
+          "Google OAuth callback failed: no user returned.",
+          info?.message || "",
+        );
+        return res.redirect(`${CLIENT_URL}/?auth=failed&reason=denied`);
       }
       const token = generateToken(user._id);
       return res.redirect(
-        `${CLIENT_URL}/auth/callback?token=${encodeURIComponent(token)}`
+        `${CLIENT_URL}/auth/callback?token=${encodeURIComponent(token)}`,
       );
-    }
+    },
   )(req, res, next);
 });
 

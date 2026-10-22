@@ -1,27 +1,36 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
 function AuthCallback() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { user, token, loading, loginWithToken } = useAuth();
-  const [phase, setPhase] = useState("init");
+  const { loginWithToken } = useAuth();
 
   useEffect(() => {
     const tokenParam = params.get("token");
-    if (tokenParam) {
-      setPhase("pending");
-      loginWithToken(tokenParam);
-    } else {
-      navigate("/", { replace: true });
+    if (!tokenParam) {
+      navigate("/?auth=failed&reason=missing_token", { replace: true });
+      return undefined;
     }
-  }, []);
 
-  useEffect(() => {
-    if (phase !== "pending" || loading) return;
-    navigate(user ? "/dashboard" : "/", { replace: true });
-  }, [phase, loading, user, token]);
+    let active = true;
+
+    // Wait for the session to actually resolve before navigating. Relying on
+    // the shared `loading` flag races with the provider's own mount effect.
+    (async () => {
+      const user = await loginWithToken(tokenParam);
+      if (!active) return;
+      navigate(
+        user ? "/dashboard" : "/?auth=failed&reason=session_failed",
+        { replace: true },
+      );
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div

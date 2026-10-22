@@ -1,4 +1,11 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 
 const AuthContext = createContext(null);
 
@@ -6,34 +13,54 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token"));
-  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [loading, setLoading] = useState(() =>
+    Boolean(localStorage.getItem("token")),
+  );
+  const fetchedToken = useRef(null);
 
-  useEffect(() => {
-    if (token) {
-      fetchMe();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    fetchedToken.current = null;
+    setToken(null);
+    setUser(null);
+    setLoading(false);
+  }, []);
 
-  const fetchMe = async () => {
-    try {
-      const res = await fetch(`${API_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
+  // Always request against an explicit token. During the OAuth callback the
+  // `token` state has not propagated yet, so reading it from this closure
+  // would send a stale value.
+  const fetchMe = useCallback(
+    async (forToken) => {
+      if (!forToken) return null;
+      setLoading(true);
+      try {
+        const res = await fetch(`${API_URL}/auth/me`, {
+          headers: { Authorization: `Bearer ${forToken}` },
+        });
+        if (!res.ok) {
+          logout();
+          return null;
+        }
         const data = await res.json();
         setUser(data.user);
-      } else {
+        return data.user;
+      } catch {
         logout();
+        return null;
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [logout],
+  );
+
+  useEffect(() => {
+    if (!token) return;
+    if (fetchedToken.current === token) return;
+    fetchedToken.current = token;
+    fetchMe(token);
+  }, [token, fetchMe]);
 
   const login = async (email, password) => {
     const res = await fetch(`${API_URL}/auth/login`, {
@@ -44,6 +71,7 @@ export function AuthProvider({ children }) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message);
     localStorage.setItem("token", data.token);
+    fetchedToken.current = data.token;
     setToken(data.token);
     setUser(data.user);
     return data;
@@ -59,21 +87,19 @@ export function AuthProvider({ children }) {
     if (!res.ok) throw new Error(data.message);
     if (data.needsVerification) return data;
     localStorage.setItem("token", data.token);
+    fetchedToken.current = data.token;
     setToken(data.token);
     setUser(data.user);
     return data;
   };
 
-  const loginWithToken = (newToken) => {
-    setLoading(true);
+  // Resolves with the authenticated user (or null) so callers can wait for the
+  // session to be ready instead of guessing from the `loading` flag.
+  const loginWithToken = async (newToken) => {
     localStorage.setItem("token", newToken);
+    fetchedToken.current = newToken;
     setToken(newToken);
-  };
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
+    return fetchMe(newToken);
   };
 
   return (

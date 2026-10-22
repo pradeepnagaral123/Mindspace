@@ -7,6 +7,24 @@ import sittingWomen from "../images/sitting_women.png";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+const GOOGLE_AUTH_ERRORS = {
+  access_denied: "Google sign-in was cancelled before it finished.",
+  denied: "Google sign-in was cancelled before it finished.",
+  redirect_uri_mismatch:
+    "Google sign-in is misconfigured on the server (redirect URI mismatch).",
+  invalid_client:
+    "Google sign-in is misconfigured on the server (invalid client ID).",
+  invalid_client_id:
+    "Google sign-in is misconfigured on the server (invalid client ID).",
+  invalid_grant:
+    "Google sign-in expired before it finished. Please try again.",
+  unauthorized_client:
+    "This Google account is not allowed to sign in here.",
+  missing_token: "Google sign-in did not return a session. Please try again.",
+  session_failed:
+    "We couldn't finish setting up your session. Please try again.",
+};
+
 const communities = [
   { icon: "🌱", title: "Stress & Anxiety", members: "12.4k members" },
   { icon: "🎓", title: "Student Life", members: "8.7k members" },
@@ -52,8 +70,12 @@ function Landing() {
 
   useEffect(() => {
     if (searchParams.get("auth") === "failed") {
+      const reason = searchParams.get("reason") || "";
       setAuthOpen(true);
-      setAuthError("Google sign-in failed. Please try again.");
+      setAuthError(
+        GOOGLE_AUTH_ERRORS[reason] ||
+          "Google sign-in failed. Please try again.",
+      );
       navigate("/", { replace: true });
     }
   }, []);
