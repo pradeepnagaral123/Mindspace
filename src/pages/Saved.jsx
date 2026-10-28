@@ -83,7 +83,7 @@ export default function Saved() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-[13px] font-semibold transition-colors sm:flex-none ${
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[11.5px] font-semibold transition-colors sm:flex-none sm:gap-2 sm:px-4 sm:text-[13px] ${
               activeTab === tab.id
                 ? "bg-navy text-white"
                 : "text-muted hover:text-ink"

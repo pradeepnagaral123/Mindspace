@@ -85,7 +85,7 @@ export default function MoodCheckIn({
                 />
               </span>
               <span
-                className={`text-center text-[10px] leading-tight font-semibold transition-colors sm:text-[11px] ${
+                className={`text-center text-[11px] leading-tight font-semibold transition-colors sm:text-[12px] ${
                   active ? option.text : "text-muted group-hover:text-ink"
                 }`}
               >
@@ -97,7 +97,7 @@ export default function MoodCheckIn({
       </div>
 
       {selected && (
-        <p className="relative mt-3 text-[11px] text-muted/70">
+        <p className="relative mt-3 text-[12px] text-muted/70">
           {moodOptions.find((option) => option.id === selected)?.hint}
         </p>
       )}

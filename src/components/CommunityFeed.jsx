@@ -40,7 +40,7 @@ export default function CommunityFeed() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                className={`rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${
                   activeTab === tab
                     ? "bg-navy text-white"
                     : "text-muted/60 hover:text-ink"
@@ -54,13 +54,13 @@ export default function CommunityFeed() {
       </div>
 
       <div className="mb-4 flex items-center justify-between gap-3">
-        <button className="flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-1.5 text-[11px] font-medium text-ink/80 shadow-sm transition-colors hover:bg-cream">
+        <button className="flex items-center gap-1.5 rounded-lg border border-line bg-white px-3 py-2 text-[12px] font-medium text-ink/80 shadow-sm transition-colors hover:bg-cream">
           <SlidersHorizontal size={12} />
           Filter
         </button>
         <button
           onClick={() => setComposerOpen(true)}
-          className="flex items-center gap-1.5 rounded-lg bg-navy/90 px-3 py-1.5 text-[11px] font-medium text-white transition-colors hover:bg-navy"
+          className="flex items-center gap-1.5 rounded-lg bg-navy/90 px-3 py-2 text-[12px] font-medium text-white transition-colors hover:bg-navy"
         >
           <PenLine size={12} />
           Create Post

@@ -8,8 +8,8 @@ export default function ArticleReaderModal({ resource, onClose }) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm"
       onClick={(event) => event.target === event.currentTarget && onClose()}
     >
-      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-2xl">
-        <div className="bg-navy p-6 text-white sm:p-8">
+      <div className="flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-2xl">
+        <div className="shrink-0 bg-navy p-5 text-white sm:p-8">
           <div className="flex items-start justify-between gap-4">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-mint/15 px-2.5 py-1 text-[10.5px] font-semibold text-mint">
               <BookOpen size={12} />
@@ -79,8 +79,8 @@ export default function ArticleReaderModal({ resource, onClose }) {
           })}
         </div>
 
-        <div className="flex items-center justify-between border-t border-line/70 px-6 py-4 sm:px-8">
-          <p className="text-[12.5px] text-muted">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-line/70 px-5 py-4 sm:px-8">
+          <p className="text-[12px] text-muted sm:text-[12.5px]">
             Written with care by the MindSpace team.
           </p>
           <button

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import {
+  ArrowLeft,
   Ban,
   Check,
   CheckCheck,
@@ -65,6 +66,7 @@ export default function Messages() {
   const [socketLive, setSocketLive] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
 
   const myId = useMemo(() => {
     if (user?._id) return String(user._id);
@@ -89,7 +91,10 @@ export default function Messages() {
 
   const targetConnection = searchParams.get("connection");
   useEffect(() => {
-    if (targetConnection) setActiveId(targetConnection);
+    if (targetConnection) {
+      setActiveId(targetConnection);
+      setMobileChatOpen(true);
+    }
   }, [targetConnection]);
 
   const fetchThreads = useCallback(async () => {
@@ -250,6 +255,7 @@ export default function Messages() {
 
   const openThread = (connectionId) => {
     setActiveId(connectionId);
+    setMobileChatOpen(true);
     setThreads((current) =>
       current.map((t) =>
         t.connectionId === connectionId ? { ...t, unread: 0 } : t,
@@ -348,7 +354,9 @@ export default function Messages() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-8">
-        <Card className="flex flex-col p-2">
+        <Card
+          className={`flex-col p-2 ${mobileChatOpen ? "hidden lg:flex" : "flex"}`}
+        >
           <div className="px-3 pt-3 pb-2">
             <div className="relative">
               <Search
@@ -451,11 +459,22 @@ export default function Messages() {
           </div>
         </Card>
 
-        <Card className="flex min-h-[540px] flex-col overflow-hidden">
+        <Card
+          className={`min-h-[440px] flex-col overflow-hidden lg:min-h-[540px] ${
+            mobileChatOpen ? "flex" : "hidden lg:flex"
+          }`}
+        >
           {activeThread ? (
             <>
-              <div className="flex items-center justify-between border-b border-line/70 px-5 py-4">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-2 border-b border-line/70 px-3 py-3.5 sm:px-5 sm:py-4">
+                <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                  <button
+                    onClick={() => setMobileChatOpen(false)}
+                    className="-ml-1 rounded-lg p-2 text-muted transition-colors hover:bg-cream hover:text-ink lg:hidden"
+                    aria-label="Back to conversations"
+                  >
+                    <ArrowLeft size={18} />
+                  </button>
                   <Avatar
                     name={activeThread.peer.name}
                     size={38}
@@ -493,7 +512,7 @@ export default function Messages() {
 
               <div
                 ref={listRef}
-                className="flex-1 space-y-3 overflow-y-auto bg-cream/40 px-5 py-5"
+                className="flex-1 space-y-3 overflow-y-auto bg-cream/40 px-3 py-4 sm:px-5 sm:py-5"
               >
                 {activeMessages.length === 0 && (
                   <p className="py-10 text-center text-[13px] text-muted">
@@ -544,7 +563,7 @@ export default function Messages() {
                                 </button>
                               </>
                             ) : (
-                              <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                              <div className="flex items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                                 {!isDeleted && (
                                   <button
                                     onClick={() => copyMessage(message)}
@@ -627,15 +646,15 @@ export default function Messages() {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 border-t border-line/70 bg-white px-4 py-3">
+              <div className="flex items-center gap-1.5 border-t border-line/70 bg-white px-2.5 py-3 sm:gap-2 sm:px-4">
                 <button
-                  className="rounded-lg p-2 text-muted hover:bg-cream hover:text-mint-deep"
+                  className="hidden rounded-lg p-2 text-muted hover:bg-cream hover:text-mint-deep sm:flex"
                   aria-label="Add attachment"
                 >
                   <Paperclip size={18} />
                 </button>
                 <button
-                  className="rounded-lg p-2 text-muted hover:bg-cream hover:text-mint-deep"
+                  className="hidden rounded-lg p-2 text-muted hover:bg-cream hover:text-mint-deep sm:flex"
                   aria-label="Add emoji"
                 >
                   <Smile size={18} />
@@ -645,15 +664,15 @@ export default function Messages() {
                   onChange={(event) => handleDraft(event.target.value)}
                   onKeyDown={(event) => event.key === "Enter" && sendMessage()}
                   placeholder="Write a kind message..."
-                  className="flex-1 rounded-xl border border-line bg-cream px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-muted/70 focus:border-mint-deep focus:bg-white focus:ring-2 focus:ring-mint/40"
+                  className="min-w-0 flex-1 rounded-xl border border-line bg-cream px-3 py-2.5 text-sm text-ink outline-none placeholder:text-muted/70 focus:border-mint-deep focus:bg-white focus:ring-2 focus:ring-mint/40 sm:px-3.5"
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!draft.trim()}
-                  className="flex items-center gap-1.5 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-2 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex shrink-0 items-center gap-1.5 rounded-xl bg-navy px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-2 disabled:cursor-not-allowed disabled:opacity-40 sm:px-4"
                 >
                   <Send size={15} />
-                  Send
+                  <span className="hidden sm:inline">Send</span>
                 </button>
               </div>
             </>

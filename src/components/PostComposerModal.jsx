@@ -23,8 +23,8 @@ export default function PostComposerModal({ open, onClose, onSubmit }) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm"
       onClick={(event) => event.target === event.currentTarget && onClose()}
     >
-      <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-line bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-line/70 px-6 py-4">
+      <div className="flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-line/70 px-4 py-4 sm:px-6">
           <h3 className="text-base font-bold text-ink">Create Post</h3>
           <button
             onClick={onClose}
@@ -35,7 +35,7 @@ export default function PostComposerModal({ open, onClose, onSubmit }) {
           </button>
         </div>
 
-        <div className="px-6 py-5">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
           <div className="flex items-center gap-3">
             <Avatar name={user.name} size={40} gradient="blossom" />
             <div>

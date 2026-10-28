@@ -178,9 +178,9 @@ export default function Profile() {
                 />
                 <span className="absolute right-1 bottom-1 h-5 w-5 rounded-full border-[3px] border-white bg-mint-deep" />
               </div>
-              <div className="pb-1">
+              <div className="min-w-0 pb-1">
                 <div className="flex items-center gap-1.5">
-                  <p className="font-display text-xl font-semibold text-ink sm:text-2xl">
+                  <p className="break-words font-display text-xl font-semibold text-ink sm:text-2xl">
                     {form.name || "Your name"}
                   </p>
                   <BadgeCheck size={19} className="text-mint-deep" />

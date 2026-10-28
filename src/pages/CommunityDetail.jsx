@@ -492,10 +492,10 @@ export default function CommunityDetail() {
               </span>
 
               <div className="relative z-10 min-w-0 flex-1 sm:pr-10">
-                <h1 className="truncate font-display text-xl font-semibold text-ink sm:text-2xl">
+                <h1 className="font-display text-xl font-semibold text-ink sm:truncate sm:text-2xl">
                   {community.name}
                 </h1>
-                <p className="mt-1 line-clamp-1 max-w-md text-xs text-muted sm:text-[13px]">
+                <p className="mt-1 line-clamp-2 max-w-md text-xs text-muted sm:line-clamp-1 sm:text-[13px]">
                   {community.description}
                 </p>
                 <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-medium text-muted sm:text-xs">
@@ -514,13 +514,13 @@ export default function CommunityDetail() {
                 </div>
               </div>
 
-              <div className="relative z-10 flex shrink-0 items-center gap-2 sm:ml-auto">
+              <div className="relative z-10 flex w-full shrink-0 items-center gap-2 sm:ml-auto sm:w-auto">
                 <button
                   onClick={toggleSaveCommunity}
                   aria-label={
                     communitySaved ? "Remove from saved" : "Save community"
                   }
-                  className={`flex items-center gap-1.5 rounded-xl border px-3 py-2.5 text-[13px] font-semibold transition-colors ${
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-[13px] font-semibold transition-colors sm:flex-none ${
                     communitySaved
                       ? "border-mint/40 bg-mint-soft text-mint-deep hover:bg-mint-soft/70"
                       : "border-white/70 bg-white/80 text-ink backdrop-blur-sm hover:bg-white"
@@ -535,7 +535,7 @@ export default function CommunityDetail() {
                 <button
                   onClick={toggleJoin}
                   disabled={toggling}
-                  className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-colors disabled:opacity-60 ${
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-colors disabled:opacity-60 sm:flex-none ${
                     community.joinedByMe
                       ? "border border-white/70 bg-white/80 text-ink backdrop-blur-sm hover:bg-white"
                       : "bg-navy text-white hover:bg-navy-2"
@@ -701,7 +701,7 @@ export default function CommunityDetail() {
                     </p>
                   )}
 
-                  <div className="mt-4 flex items-center gap-2 border-t border-line/70 pt-3">
+                  <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-line/70 pt-3 sm:gap-2">
                     {post.isAuthor ? (
                       <span className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-muted">
                         <Heart size={14} />

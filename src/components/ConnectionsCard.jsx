@@ -108,14 +108,14 @@ export default function ConnectionsCard() {
             />
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-[12px] font-semibold text-ink">
+                <p className="truncate text-[13px] font-semibold text-ink">
                   {peer.name}
                 </p>
-                <span className="shrink-0 text-[10px] text-muted/50">
+                <span className="shrink-0 text-[11px] text-muted/50">
                   {peer.time}
                 </span>
               </div>
-              <p className="mt-0.5 line-clamp-1 text-[11px] text-muted/65">
+              <p className="mt-0.5 line-clamp-1 text-[12px] text-muted/65">
                 {peer.message}
               </p>
             </div>

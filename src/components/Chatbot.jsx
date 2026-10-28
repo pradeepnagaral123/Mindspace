@@ -76,10 +76,10 @@ export default function Chatbot() {
     <>
       {open && (
         <div
-          className={`fixed bottom-24 right-4 z-40 flex flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-[0_16px_48px_rgba(7,21,34,0.22)] transition-all duration-300 sm:right-6 ${
+          className={`fixed bottom-20 left-3 right-3 z-40 flex flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-[0_16px_48px_rgba(7,21,34,0.22)] transition-all duration-300 sm:right-6 sm:bottom-24 sm:left-auto ${
             expanded
-              ? "h-[70vh] w-[calc(100vw-2rem)] max-w-[620px]"
-              : "h-[460px] w-[calc(100vw-2rem)] max-w-[370px]"
+              ? "h-[calc(100dvh-8rem)] max-h-[760px] sm:h-[70vh] sm:w-[620px]"
+              : "h-[70dvh] max-h-[460px] sm:h-[460px] sm:w-[370px]"
           }`}
         >
           <div className="flex items-center justify-between bg-navy px-4 py-3 text-white">
@@ -89,20 +89,20 @@ export default function Chatbot() {
               </span>
               <div>
                 <p className="text-sm font-bold leading-tight">MindSpace Assistant</p>
-                <p className="text-[11px] leading-tight text-mint">Online · mental health info</p>
+                <p className="text-[12px] leading-tight text-mint">Online · mental health info</p>
               </div>
             </div>
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setExpanded((prev) => !prev)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-mint text-white transition-colors hover:bg-mint-deep"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-mint transition-colors hover:bg-white/20"
                 aria-label={expanded ? "Restore chat window" : "Enlarge chat window"}
               >
                 {expanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-mint text-white transition-colors hover:bg-mint-deep"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-mint transition-colors hover:bg-white/20"
                 aria-label="Close chat"
               >
                 <X size={18} />
@@ -126,7 +126,7 @@ export default function Chatbot() {
                   className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[80%] whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
+                    className={`max-w-[85%] whitespace-pre-line rounded-2xl px-3.5 py-2.5 text-[14px] leading-relaxed ${
                       message.role === "user"
                         ? "rounded-br-md bg-navy text-white"
                         : "rounded-bl-md border border-line bg-white text-ink shadow-sm"
@@ -167,7 +167,7 @@ export default function Chatbot() {
                 <Send size={17} />
               </button>
             </div>
-            <p className="mt-2 text-center text-[10px] leading-tight text-muted">
+            <p className="mt-2 text-center text-[11px] leading-tight text-muted">
               General information only — not a substitute for professional help.
             </p>
           </div>
@@ -177,7 +177,7 @@ export default function Chatbot() {
       <button
         onClick={() => setOpen((prev) => !prev)}
         aria-label={open ? "Close chatbot" : "Open chatbot"}
-        className={`fixed bottom-5 right-4 z-50 flex items-center gap-2.5 rounded-xl px-5 py-3.5 text-base font-bold shadow-[0_8px_24px_rgba(7,21,34,0.28)] transition-all hover:-translate-y-1 sm:right-6 ${
+        className={`fixed right-4 bottom-4 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full px-4 py-3 text-sm font-bold shadow-[0_8px_24px_rgba(7,21,34,0.28)] transition-all hover:-translate-y-1 sm:right-6 sm:bottom-5 sm:gap-2.5 sm:rounded-xl sm:px-5 sm:py-3.5 sm:text-base ${
           open ? "bg-navy text-mint" : "bg-mint text-navy"
         }`}
       >

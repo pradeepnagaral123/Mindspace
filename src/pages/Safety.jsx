@@ -143,7 +143,7 @@ export default function Safety() {
                   key={control.title}
                   className="flex items-center justify-between gap-4 py-4"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[13.5px] font-semibold text-ink">
                       {control.title}
                     </p>

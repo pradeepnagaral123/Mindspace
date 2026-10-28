@@ -176,9 +176,9 @@ export default function FindAPeer() {
         </div>
 
         <div className="lg:col-span-2">
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-1">
             <h2 className="text-[15px] font-bold text-ink">Verified members</h2>
-            <span className="text-[12px] text-muted">
+            <span className="hidden text-[12px] text-muted sm:inline">
               Real accounts from the MindSpace community
             </span>
           </div>

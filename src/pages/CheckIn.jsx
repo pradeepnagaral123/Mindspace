@@ -195,7 +195,7 @@ export default function CheckIn() {
 
       <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
         <Card className="p-5 lg:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-[15px] font-bold text-ink">
               How did today feel?
             </h3>

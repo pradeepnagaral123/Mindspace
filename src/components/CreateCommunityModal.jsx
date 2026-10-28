@@ -51,9 +51,9 @@ export default function CreateCommunityModal({ open, onClose, onSubmit, submitti
     >
       <form
         onSubmit={submit}
-        className="w-full max-w-lg overflow-hidden rounded-3xl border border-line bg-white shadow-2xl"
+        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-line bg-white shadow-2xl"
       >
-        <div className="flex items-center justify-between border-b border-line/70 px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-line/70 px-4 py-4 sm:px-6">
           <h3 className="text-base font-bold text-ink">Create Community</h3>
           <button
             type="button"
@@ -65,7 +65,7 @@ export default function CreateCommunityModal({ open, onClose, onSubmit, submitti
           </button>
         </div>
 
-        <div className="space-y-4 px-6 py-5">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
           <div>
             <label className="text-[12px] font-semibold text-muted">
               Community name
@@ -139,12 +139,12 @@ export default function CreateCommunityModal({ open, onClose, onSubmit, submitti
         </div>
 
         {error && (
-          <p className="px-6 text-[12px] font-medium text-blossom-deep">
+          <p className="px-4 text-[12px] font-medium text-blossom-deep sm:px-6">
             {error}
           </p>
         )}
 
-        <div className="flex justify-end gap-2 border-t border-line/70 px-6 py-4">
+        <div className="flex shrink-0 justify-end gap-2 border-t border-line/70 px-4 py-4 sm:px-6">
           <button
             type="button"
             onClick={onClose}

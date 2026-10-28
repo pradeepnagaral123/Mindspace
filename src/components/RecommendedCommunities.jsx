@@ -33,14 +33,14 @@ export default function RecommendedCommunities() {
               <Icon name={community.icon} size={16} strokeWidth={2} />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-semibold text-ink group-hover:text-lavender-deep">
+              <p className="text-[13px] font-semibold text-ink group-hover:text-lavender-deep">
                 {community.name}
               </p>
-              <p className="mt-0.5 line-clamp-1 text-[11px] leading-relaxed text-muted/65">
+              <p className="mt-0.5 line-clamp-1 text-[12px] leading-relaxed text-muted/65">
                 {community.description}
               </p>
-              <p className="mt-0.5 flex items-center gap-1 text-[10px] text-muted/50">
-                <Users size={9} />
+              <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted/50">
+                <Users size={10} />
                 {community.members}
               </p>
             </div>
