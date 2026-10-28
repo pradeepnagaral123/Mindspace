@@ -11,6 +11,31 @@ const router = express.Router();
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 const VERIFY_TOKEN_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
+const isLocalHost = (hostname) =>
+  hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+
+// Google requires the redirect URI sent to it to match one registered in the
+// Google Cloud Console byte-for-byte. Deriving it from the request means local
+// dev (localhost:5000) and production (https://<api-host>) both work without
+// editing env vars, as long as each one is registered.
+const googleCallbackUrl = (req) => {
+  const derived = `${req.protocol}://${req.get("host")}/api/auth/google/callback`;
+
+  const configured = process.env.GOOGLE_CALLBACK_URL?.trim();
+  if (!configured) return derived;
+
+  try {
+    const url = new URL(configured);
+    // A leftover localhost value must not be sent from a deployed server.
+    if (isLocalHost(url.hostname) && !isLocalHost(req.hostname)) {
+      return derived;
+    }
+    return configured;
+  } catch {
+    return derived;
+  }
+};
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
@@ -191,16 +216,27 @@ router.get("/me", auth, async (req, res) => {
 });
 
 // GET /api/auth/google -> redirect to Google consent screen
-router.get(
-  "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
+router.get("/google", (req, res, next) => {
+  const callbackURL = googleCallbackUrl(req);
+  console.log(
+    `Google OAuth redirect URI: ${callbackURL}\n` +
+      "Register this exact URI under Credentials > OAuth 2.0 Client > Authorized redirect URIs.",
+  );
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+    callbackURL,
+  })(req, res, next);
+});
 
 // GET /api/auth/google/callback -> verify, issue JWT, bounce back to SPA
 router.get("/google/callback", (req, res, next) => {
   passport.authenticate(
     "google",
-    { session: false, failureRedirect: `${CLIENT_URL}/?auth=failed&reason=denied` },
+    {
+      session: false,
+      callbackURL: googleCallbackUrl(req),
+      failureRedirect: `${CLIENT_URL}/?auth=failed&reason=denied`,
+    },
     (error, user, info) => {
       if (error) {
         // Without this the real reason (redirect_uri_mismatch, invalid_client,

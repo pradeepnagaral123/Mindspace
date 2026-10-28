@@ -11,7 +11,7 @@ const GOOGLE_AUTH_ERRORS = {
   access_denied: "Google sign-in was cancelled before it finished.",
   denied: "Google sign-in was cancelled before it finished.",
   redirect_uri_mismatch:
-    "Google sign-in is misconfigured on the server (redirect URI mismatch).",
+    `Google sign-in is misconfigured: add ${API_URL}/auth/google/callback to your OAuth client's Authorized redirect URIs in Google Cloud Console.`,
   invalid_client:
     "Google sign-in is misconfigured on the server (invalid client ID).",
   invalid_client_id:

@@ -7,8 +7,8 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL:
-        process.env.GOOGLE_CALLBACK_URL || "/api/auth/google/callback",
+      // The callback URL is supplied per-request from routes/auth.js so it
+      // always matches the host the browser is actually using.
       scope: ["profile", "email"],
     },
     async (accessToken, refreshToken, profile, done) => {
