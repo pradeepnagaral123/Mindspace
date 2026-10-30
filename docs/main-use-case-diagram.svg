@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="737" height="1066" viewBox="0 0 737 1066">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="24" y="36" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="600" fill="#111827">MindSpace — Main Use Case Diagram</text>
+  <text x="24" y="70" font-family="Cascadia Mono, Consolas, 'Courier New', monospace" font-size="14" fill="#111827" xml:space="preserve">
+    <tspan x="24" dy="0">                              MINDSPACE SYSTEM</tspan>
+    <tspan x="24" dy="18">   ACTORS        ┌──────────────────────────────────────────────────────────────┐</tspan>
+    <tspan x="24" dy="18">                 │                                                              │</tspan>
+    <tspan x="24" dy="18">  ┌─────────┐    │   ┌──────────────── AUTHENTICATION ──────────────────┐        │</tspan>
+    <tspan x="24" dy="18">  │ VISITOR │    │   │ (Browse landing page)                           │        │</tspan>
+    <tspan x="24" dy="18">  └────┬────┘    │   │ (Register with email) ──► (Verify email)        │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Resend verification email)                     │        │</tspan>
+    <tspan x="24" dy="18">       ├────────►│   │ (Sign in with password)                         │        │</tspan>
+    <tspan x="24" dy="18">       ├────────►│   │ (Sign in with Google)                           │        │</tspan>
+    <tspan x="24" dy="18">       ├────────►│   └─────────────────────────────────────────────────┘        │</tspan>
+    <tspan x="24" dy="18">       └────────►│                                                              │</tspan>
+    <tspan x="24" dy="18">                 │   ┌──────────────── WELLBEING ──────────────────────┐        │</tspan>
+    <tspan x="24" dy="18">  ┌─────────┐    │   │ (Do daily mood check-in)                        │        │</tspan>
+    <tspan x="24" dy="18">  │REGISTERED│   │   │ (View mood stats / overview / calendar)         │        │</tspan>
+    <tspan x="24" dy="18">  │  USER   │    │   │ (View check-in history)                         │        │</tspan>
+    <tspan x="24" dy="18">  └────┬────┘    │   │ (Delete a check-in)                             │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Write / delete journal entry)                  │        │</tspan>
+    <tspan x="24" dy="18">       ├────────►│   │ (Talk to AI companion)                          │        │</tspan>
+    <tspan x="24" dy="18">       ├────────►│   └─────────────────────────────────────────────────┘        │</tspan>
+    <tspan x="24" dy="18">       │         │                                                              │</tspan>
+    <tspan x="24" dy="18">       ├────────►│   ┌──────────────── COMMUNITY ──────────────────────┐        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Browse communities)                            │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Join / leave community)                        │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (View members)                                  │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Create post)                                   │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Like / comment on post)                        │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Edit / delete own post)                        │        │</tspan>
+    <tspan x="24" dy="18">       │         │   └─────────────────────────────────────────────────┘        │</tspan>
+    <tspan x="24" dy="18">       │         │                                                              │</tspan>
+    <tspan x="24" dy="18">       ├────────►│   ┌──────────────── PEER SUPPORT ───────────────────┐        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Find peers / view suggestions)                 │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Connect with a peer)                           │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Chat in real time)                             │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Send / delete message)                         │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (See typing / read / online status)             │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (View / read notifications)                     │        │</tspan>
+    <tspan x="24" dy="18">       │         │   └─────────────────────────────────────────────────┘        │</tspan>
+    <tspan x="24" dy="18">       │         │                                                              │</tspan>
+    <tspan x="24" dy="18">       ├────────►│   ┌──────────────── CONTENT &amp; SAFETY ───────────────┐        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Read resources / articles)                     │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Save / unsave content)                         │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (View saved items)                              │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (View helplines)                                │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (View safety controls)                          │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (View support center / FAQ)                     │        │</tspan>
+    <tspan x="24" dy="18">       │         │   └─────────────────────────────────────────────────┘        │</tspan>
+    <tspan x="24" dy="18">       │         │                                                              │</tspan>
+    <tspan x="24" dy="18">       ├────────►│   ┌──────────────── PROFILE ────────────────────────┐        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (View profile + stats)                          │        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Edit profile)                          [UI only]│        │</tspan>
+    <tspan x="24" dy="18">       │         │   │ (Sign out)                                      │        │</tspan>
+    <tspan x="24" dy="18">       └────────►│   └─────────────────────────────────────────────────┘        │</tspan>
+    <tspan x="24" dy="18">                 │                                                              │</tspan>
+    <tspan x="24" dy="18">                 └──────────────────────────────────────────────────────────────┘</tspan>
+  </text>
+</svg>

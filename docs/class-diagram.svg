@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1712" height="1900" viewBox="0 0 1712 1900">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="24" y="40" font-family="Cascadia Mono, Consolas, 'Courier New', monospace" font-size="14" fill="#111827" xml:space="preserve">
+    <tspan x="24" dy="0">                    MINDSPACE — CLASS DIAGRAM</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18">  RELATIONSHIP MAP</tspan>
+    <tspan x="24" dy="18">  ────────────────────────────────────────────────────────────────────────────</tspan>
+    <tspan x="24" dy="18">  USER 1 ────────── 0..* JOURNAL             (user)</tspan>
+    <tspan x="24" dy="18">  USER 1 ────────── 0..* MOOD                (user)</tspan>
+    <tspan x="24" dy="18">  USER 1 ────────── 0..* SAVED               (user)</tspan>
+    <tspan x="24" dy="18">  USER 1 ────────── 0..* NOTIFICATION        (user)</tspan>
+    <tspan x="24" dy="18">  USER 1 ────────── 0..* CONNECTION          (user / requester)</tspan>
+    <tspan x="24" dy="18">  USER 1 ────────── 0..* CONNECTION          (peer / receiver)</tspan>
+    <tspan x="24" dy="18">  CONNECTION 1 ──── 0..* MESSAGE             (connection)</tspan>
+    <tspan x="24" dy="18">  USER 1 ────────── 0..* MESSAGE             (sender)</tspan>
+    <tspan x="24" dy="18">  USER 1 ────────── 0..* COMMUNITY           (createdBy)</tspan>
+    <tspan x="24" dy="18">  COMMUNITY 1 ───── 0..* COMMUNITY_MEMBER    (community)</tspan>
+    <tspan x="24" dy="18">  USER 1 ────────── 0..* COMMUNITY_MEMBER    (user)</tspan>
+    <tspan x="24" dy="18">  COMMUNITY 1 ───── 0..* POST                (community)</tspan>
+    <tspan x="24" dy="18">  USER 1 ────────── 0..* POST                (author)</tspan>
+    <tspan x="24" dy="18">  POST 1 ────────── 0..* COMMENT             (composition / embedded)</tspan>
+    <tspan x="24" dy="18">  USER 1 ────────── 0..* COMMENT             (author)</tspan>
+    <tspan x="24" dy="18">  SAVED 0..* ────── 0..1 POST | COMMUNITY    (polymorphic refId)</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18">  LEGEND</tspan>
+    <tspan x="24" dy="18">  ────────────────────────────────────────────────────────────────────────────</tspan>
+    <tspan x="24" dy="18">  ──────► association / reference      ◆────► composition (embedded)</tspan>
+    <tspan x="24" dy="18">  1 : 0..*  one-to-many                1 : 1  one-to-one</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18">  CLASSES</tspan>
+    <tspan x="24" dy="18">  ────────────────────────────────────────────────────────────────────────────</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18">┌──────────────────────────────────────────────────────────────┐   ┌──────────────────────────────────────────────────────────────┐   ┌──────────────────────────────────────────────────────────────┐</tspan>
+    <tspan x="24" dy="18">│                             USER                             │   │                          COMMUNITY                           │   │                           JOURNAL                            │</tspan>
+    <tspan x="24" dy="18">├──────────────────────────────────────────────────────────────┤   ├──────────────────────────────────────────────────────────────┤   ├──────────────────────────────────────────────────────────────┤</tspan>
+    <tspan x="24" dy="18">│ - _id: ObjectId                                              │   │ - _id: ObjectId                                              │   │ - _id: ObjectId                                              │</tspan>
+    <tspan x="24" dy="18">│ - name: String {required, max 50}                            │   │ - name: String {required}                                    │   │ - user: User {ref, required}                                 │</tspan>
+    <tspan x="24" dy="18">│ - email: String {required, unique}                           │   │ - description: String = ""                                   │   │ - title: String = "Untitled entry"                           │</tspan>
+    <tspan x="24" dy="18">│ - password: String? {bcrypt hashed}                          │   │ - category: enum {Support, Wellbeing,                        │   │ - text: String {required}                                    │</tspan>
+    <tspan x="24" dy="18">│ - googleId: String? {sparse}                                 │   │           Mindfulness}                                       │   │ - mood: enum {great, good, okay, low,                        │</tspan>
+    <tspan x="24" dy="18">│ - avatar: String = ""                                        │   │ - icon: String = "graduationCap"                             │   │         awful}                                               │</tspan>
+    <tspan x="24" dy="18">│ - isVerified: Boolean                                        │   │ - accent: String                                             │   │ - createdAt / updatedAt: Date                                │</tspan>
+    <tspan x="24" dy="18">│ - verifyToken: String? {select:false}                        │   │ - createdBy: User? {ref}                                     │   └──────────────────────────────────────────────────────────────┘</tspan>
+    <tspan x="24" dy="18">│ - verifyTokenExpires: Date? {select:false}                   │   │ - createdAt / updatedAt: Date                                │</tspan>
+    <tspan x="24" dy="18">│ - createdAt / updatedAt: Date                                │   └──────────────────────────────────────────────────────────────┘</tspan>
+    <tspan x="24" dy="18">├──────────────────────────────────────────────────────────────┤</tspan>
+    <tspan x="24" dy="18">│ + comparePassword(pw): Boolean                               │</tspan>
+    <tspan x="24" dy="18">│ + hashPassword() «pre-save»                                  │</tspan>
+    <tspan x="24" dy="18">└──────────────────────────────────────────────────────────────┘</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18">┌──────────────────────────────────────────────────────────────┐   ┌──────────────────────────────────────────────────────────────┐   ┌──────────────────────────────────────────────────────────────┐</tspan>
+    <tspan x="24" dy="18">│                             POST                             │   │                             MOOD                             │   │                           COMMENT                            │</tspan>
+    <tspan x="24" dy="18">├──────────────────────────────────────────────────────────────┤   ├──────────────────────────────────────────────────────────────┤   │                      «embedded in Post»                      │</tspan>
+    <tspan x="24" dy="18">│ - _id: ObjectId                                              │   │ - _id: ObjectId                                              │   ├──────────────────────────────────────────────────────────────┤</tspan>
+    <tspan x="24" dy="18">│ - community: Community {ref}                                 │   │ - user: User {ref, required}                                 │   │ - author: User {ref, required}                               │</tspan>
+    <tspan x="24" dy="18">│ - author: User {ref}                                         │   │ - mood: enum {great, good, okay, low,                        │   │ - text: String {required, max 1000}                          │</tspan>
+    <tspan x="24" dy="18">│ - text: String {required, max 2000}                          │   │         struggling}                                          │   │ - createdAt: Date = now                                      │</tspan>
+    <tspan x="24" dy="18">│ - likes: User[] {ref}                                        │   │ - stress: Number 1..5 = 3                                    │   └──────────────────────────────────────────────────────────────┘</tspan>
+    <tspan x="24" dy="18">│ - comments: Comment[] {embedded}                             │   │ - energy: Number 1..5 = 3                                    │</tspan>
+    <tspan x="24" dy="18">│ - createdAt / updatedAt: Date                                │   │ - moodScore: Number 1..5                                     │</tspan>
+    <tspan x="24" dy="18">└──────────────────────────────────────────────────────────────┘   │ - note: String = ""                                          │</tspan>
+    <tspan x="24" dy="18">                                                                   │ - createdAt / updatedAt: Date                                │</tspan>
+    <tspan x="24" dy="18">                                                                   └──────────────────────────────────────────────────────────────┘</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18">┌──────────────────────────────────────────────────────────────┐   ┌──────────────────────────────────────────────────────────────┐   ┌──────────────────────────────────────────────────────────────┐</tspan>
+    <tspan x="24" dy="18">│                            SAVED                             │   │                       COMMUNITY_MEMBER                       │   │                         NOTIFICATION                         │</tspan>
+    <tspan x="24" dy="18">├──────────────────────────────────────────────────────────────┤   ├──────────────────────────────────────────────────────────────┤   ├──────────────────────────────────────────────────────────────┤</tspan>
+    <tspan x="24" dy="18">│ - _id: ObjectId                                              │   │ - _id: ObjectId                                              │   │ - _id: ObjectId                                              │</tspan>
+    <tspan x="24" dy="18">│ - user: User {ref, required}                                 │   │ - community: Community {ref}                                 │   │ - user: User {ref, required}                                 │</tspan>
+    <tspan x="24" dy="18">│ - itemType: enum {post, resource,                            │   │ - user: User {ref}                                           │   │ - type: enum {connection, message,                           │</tspan>
+    <tspan x="24" dy="18">│             community}                                       │   │ - role: enum {member, owner}                                 │   │         system}                                              │</tspan>
+    <tspan x="24" dy="18">│ - refId: String                                              │   │         = member                                             │   │ - title: String {required}                                   │</tspan>
+    <tspan x="24" dy="18">│ - title: String = ""                                         │   │ - createdAt / updatedAt: Date                                │   │ - body: String = ""                                          │</tspan>
+    <tspan x="24" dy="18">│ - description: String = ""                                   │   │ «index» unique(community, user)                              │   │ - link: String = ""                                          │</tspan>
+    <tspan x="24" dy="18">│ - category / meta / icon / accent: Str                       │   └──────────────────────────────────────────────────────────────┘   │ - read: Boolean = false                                      │</tspan>
+    <tspan x="24" dy="18">│ - createdAt / updatedAt: Date                                │                                                                      │ - createdAt / updatedAt: Date                                │</tspan>
+    <tspan x="24" dy="18">│ «index» unique(user, itemType, refId)                        │                                                                      └──────────────────────────────────────────────────────────────┘</tspan>
+    <tspan x="24" dy="18">└──────────────────────────────────────────────────────────────┘</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18">┌──────────────────────────────────────────────────────────────┐   ┌──────────────────────────────────────────────────────────────┐</tspan>
+    <tspan x="24" dy="18">│                          CONNECTION                          │   │                           MESSAGE                            │</tspan>
+    <tspan x="24" dy="18">├──────────────────────────────────────────────────────────────┤   ├──────────────────────────────────────────────────────────────┤</tspan>
+    <tspan x="24" dy="18">│ - _id: ObjectId                                              │   │ - _id: ObjectId                                              │</tspan>
+    <tspan x="24" dy="18">│ - user: User {ref, required}                                 │   │ - connection: Connection {ref}                               │</tspan>
+    <tspan x="24" dy="18">│ - peer: User {ref, required}                                 │   │ - sender: User {ref}                                         │</tspan>
+    <tspan x="24" dy="18">│ - status: enum {pending, accepted}                           │   │ - text: String {required, max 2000}                          │</tspan>
+    <tspan x="24" dy="18">│           = accepted                                         │   │ - readAt: Date? = null                                       │</tspan>
+    <tspan x="24" dy="18">│ - lastMessage: String = ""                                   │   │ - deleted: Boolean = false                                   │</tspan>
+    <tspan x="24" dy="18">│ - createdAt / updatedAt: Date                                │   │ - deletedAt: Date? = null                                    │</tspan>
+    <tspan x="24" dy="18">└──────────────────────────────────────────────────────────────┘   │ - createdAt / updatedAt: Date                                │</tspan>
+    <tspan x="24" dy="18">                                                                   └──────────────────────────────────────────────────────────────┘</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18">  ENUMERATIONS</tspan>
+    <tspan x="24" dy="18">  ────────────────────────────────────────────────────────────────────────────</tspan>
+    <tspan x="24" dy="18">  Mood.mood          great | good | okay | low | struggling</tspan>
+    <tspan x="24" dy="18">  Journal.mood       great | good | okay | low | awful</tspan>
+    <tspan x="24" dy="18">  Connection.status  pending | accepted</tspan>
+    <tspan x="24" dy="18">  Notification.type  connection | message | system</tspan>
+    <tspan x="24" dy="18">  Community.category Support | Wellbeing | Mindfulness</tspan>
+    <tspan x="24" dy="18">  CommunityMember.role member | owner</tspan>
+    <tspan x="24" dy="18">  Saved.itemType     post | resource | community</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18">  NOTE: All classes include createdAt / updatedAt (Mongoose timestamps).</tspan>
+    <tspan x="24" dy="18">        Comment is embedded in Post (not a separate collection).</tspan>
+    <tspan x="24" dy="18">        Saved references Post/Community by polymorphic string refId.</tspan>
+  </text>
+</svg>

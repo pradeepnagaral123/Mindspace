@@ -13,7 +13,7 @@ const GOOGLE_AUTH_ERRORS = {
   redirect_uri_mismatch:
     `Google sign-in is misconfigured: add ${API_URL}/auth/google/callback to your OAuth client's Authorized redirect URIs in Google Cloud Console.`,
   invalid_client:
-    "Google sign-in is misconfigured on the server (invalid client ID).",
+    "Google sign-in is misconfigured on the server (client ID/secret pair is wrong or missing).",
   invalid_client_id:
     "Google sign-in is misconfigured on the server (invalid client ID).",
   invalid_grant:

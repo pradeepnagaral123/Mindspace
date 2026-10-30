@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1023" height="892" viewBox="0 0 1023 892">
+  <rect width="100%" height="100%" fill="#ffffff"/>
+  <text x="24" y="40" font-family="Cascadia Mono, Consolas, 'Courier New', monospace" font-size="14" fill="#111827" xml:space="preserve">
+    <tspan x="24" dy="0">              MINDSPACE — COMPLETE USER STATE DIAGRAM (HORIZONTAL BLOCKS)</tspan>
+    <tspan x="24" dy="18">              sign-in → dashboard → every feature → sign-out</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18"> ┌─────────┐   sign in    ┌────────────────┐    JWT     ┌───────────────────────┐   entry   ┌─────────────┐</tspan>
+    <tspan x="24" dy="18"> │ VISITOR │─────────────►│ AUTHENTICATING │───────────►│ AUTHENTICATED SESSION │──────────►│  DASHBOARD  │</tspan>
+    <tspan x="24" dy="18"> └─────────┘              └────────────────┘            └───────────────────────┘           └──────┬──────┘</tspan>
+    <tspan x="24" dy="18">                                                                                                  │</tspan>
+    <tspan x="24" dy="18">                                                                                   sidebar        │</tspan>
+    <tspan x="24" dy="18">                                                                                                  ▼</tspan>
+    <tspan x="24" dy="18"> ┌──────────────────┬──────────────────┬──────────────────┬──────────────────┬──────────────────┬──────────────────┐</tspan>
+    <tspan x="24" dy="18"> │     WELLBEING    │     COMMUNITY    │   PEER SUPPORT   │      CONTENT     │  SUPPORT &amp; SAFETY│      ACCOUNT     │</tspan>
+    <tspan x="24" dy="18"> ├──────────────────┼──────────────────┼──────────────────┼──────────────────┼──────────────────┼──────────────────┤</tspan>
+    <tspan x="24" dy="18"> │ CHECK_IN         │ LIST             │ FIND_A_PEER      │ RESOURCES        │ SUPPORT_CENTER   │ PROFILE          │</tspan>
+    <tspan x="24" dy="18"> │ · save mood      │ · open community │ · connect        │ · browse / read  │ · FAQ / help     │ · view / edit    │</tspan>
+    <tspan x="24" dy="18"> │ HISTORY          │ DETAIL           │ MESSAGES         │ ARTICLE_READER   │ SAFETY           │ · stats          │</tspan>
+    <tspan x="24" dy="18"> │ · stats/calendar │ · join / leave   │ · threads        │ · close          │ · view / toggle  │ SIGN OUT         │</tspan>
+    <tspan x="24" dy="18"> │ · delete check-in│ · create post    │ CHAT_THREAD      │ SAVED            │ HELPLINES        │ · -&gt; VISITOR     │</tspan>
+    <tspan x="24" dy="18"> │ JOURNAL          │ · like / comment │ · send / delete  │ · save / unsave  │ · emergency      │                  │</tspan>
+    <tspan x="24" dy="18"> │ · write / delete │ · edit/delete own│ · typing / read  │ · view saved     │   contacts       │                  │</tspan>
+    <tspan x="24" dy="18"> │                  │ · view members   │ · presence       │                  │                  │                  │</tspan>
+    <tspan x="24" dy="18"> │                  │ · create community│                 │                  │                  │                  │</tspan>
+    <tspan x="24" dy="18"> └──────────────────┴──────────────────┴──────────────────┴──────────────────┴──────────────────┴──────────────────┘</tspan>
+    <tspan x="24" dy="18">          ▲                  │                  │                  │                  │                  │</tspan>
+    <tspan x="24" dy="18">          │                  └──────◄───────────┴──────◄───────────┴──────◄───────────┴──────◄───────────┘</tspan>
+    <tspan x="24" dy="18">          │                                   back to DASHBOARD / sidebar</tspan>
+    <tspan x="24" dy="18">          │</tspan>
+    <tspan x="24" dy="18">          │ sign out / token cleared</tspan>
+    <tspan x="24" dy="18">          └──────────────────────────────────────────────► SIGNED OUT ──► VISITOR</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18"> ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────┐</tspan>
+    <tspan x="24" dy="18"> │ GLOBAL — available from every in-session block above:                                                      │</tspan>
+    <tspan x="24" dy="18"> │   NOTIFICATIONS : view list / mark one read / mark all read                                                │</tspan>
+    <tspan x="24" dy="18"> │   AI_CHATBOT    : open / send message / close                                                              │</tspan>
+    <tspan x="24" dy="18"> └──────────────────────────────────────────────────────────────────────────────────────────────────────────┘</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18"> ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────┐</tspan>
+    <tspan x="24" dy="18"> │ KEY TRANSITIONS                                                                                            │</tspan>
+    <tspan x="24" dy="18"> │   CHECK_IN ◄──────────────► HISTORY          LIST ──open──► DETAIL ──back──► LIST                          │</tspan>
+    <tspan x="24" dy="18"> │   FIND_A_PEER ──connect──► MESSAGES ──open──► CHAT_THREAD                                                   │</tspan>
+    <tspan x="24" dy="18"> │   RESOURCES ──read──► ARTICLE_READER ──save──► SAVED                                                       │</tspan>
+    <tspan x="24" dy="18"> │   PROFILE ──sign out──► SIGNED OUT ──token cleared──► VISITOR                                              │</tspan>
+    <tspan x="24" dy="18"> └──────────────────────────────────────────────────────────────────────────────────────────────────────────┘</tspan>
+    <tspan x="24" dy="18"> </tspan>
+    <tspan x="24" dy="18"> NOTE: Registration is an alternate entry to VISITOR:</tspan>
+    <tspan x="24" dy="18">       REGISTERING ──► PENDING_VERIFY ──verify link──► VERIFYING ──► VISITOR</tspan>
+    <tspan x="24" dy="18">       (Google sign-in skips email verification.)</tspan>
+  </text>
+</svg>
