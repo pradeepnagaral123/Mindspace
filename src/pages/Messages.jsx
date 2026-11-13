@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { io } from "socket.io-client";
+import EmojiPicker from "emoji-picker-react";
 import {
   ArrowLeft,
   Ban,
@@ -9,7 +10,6 @@ import {
   Copy,
   MessageCircle,
   MoreVertical,
-  Paperclip,
   Search,
   Send,
   Smile,
@@ -67,6 +67,7 @@ export default function Messages() {
   const [copiedId, setCopiedId] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const [emojiOpen, setEmojiOpen] = useState(false);
 
   const myId = useMemo(() => {
     if (user?._id) return String(user._id);
@@ -83,11 +84,31 @@ export default function Messages() {
   const socketRef = useRef(null);
   const activeIdRef = useRef(null);
   const listRef = useRef(null);
+  const inputRef = useRef(null);
+  const emojiRef = useRef(null);
   const lastTypingRef = useRef(0);
 
   useEffect(() => {
     activeIdRef.current = activeId;
   }, [activeId]);
+
+  useEffect(() => {
+    if (!emojiOpen) return undefined;
+    const handlePointerDown = (event) => {
+      if (emojiRef.current && !emojiRef.current.contains(event.target)) {
+        setEmojiOpen(false);
+      }
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setEmojiOpen(false);
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [emojiOpen]);
 
   const targetConnection = searchParams.get("connection");
   useEffect(() => {
@@ -256,6 +277,7 @@ export default function Messages() {
   const openThread = (connectionId) => {
     setActiveId(connectionId);
     setMobileChatOpen(true);
+    setEmojiOpen(false);
     setThreads((current) =>
       current.map((t) =>
         t.connectionId === connectionId ? { ...t, unread: 0 } : t,
@@ -271,6 +293,7 @@ export default function Messages() {
     if (!text || !socket || !connId) return;
 
     setDraft("");
+    setEmojiOpen(false);
     socket.emit("typing", { connectionId: connId, typing: false });
     lastTypingRef.current = 0;
 
@@ -324,6 +347,11 @@ export default function Messages() {
       socket.emit("typing", { connectionId: connId, typing: false });
       lastTypingRef.current = 0;
     }
+  };
+
+  const addEmoji = (emojiData) => {
+    handleDraft(`${draft}${emojiData.emoji}`);
+    inputRef.current?.focus();
   };
 
   const activeThread = threads.find((t) => t.connectionId === activeId);
@@ -647,19 +675,32 @@ export default function Messages() {
               </div>
 
               <div className="flex items-center gap-1.5 border-t border-line/70 bg-white px-2.5 py-3 sm:gap-2 sm:px-4">
-                <button
-                  className="hidden rounded-lg p-2 text-muted hover:bg-cream hover:text-mint-deep sm:flex"
-                  aria-label="Add attachment"
-                >
-                  <Paperclip size={18} />
-                </button>
-                <button
-                  className="hidden rounded-lg p-2 text-muted hover:bg-cream hover:text-mint-deep sm:flex"
-                  aria-label="Add emoji"
-                >
-                  <Smile size={18} />
-                </button>
+                <div ref={emojiRef} className="relative hidden sm:block">
+                  <button
+                    type="button"
+                    onClick={() => setEmojiOpen((open) => !open)}
+                    className={`rounded-lg p-2 text-muted hover:bg-cream hover:text-mint-deep ${
+                      emojiOpen ? "bg-cream text-mint-deep" : ""
+                    }`}
+                    aria-label="Add emoji"
+                    aria-expanded={emojiOpen}
+                  >
+                    <Smile size={18} />
+                  </button>
+                  {emojiOpen && (
+                    <div className="absolute bottom-full left-0 z-30 mb-2 overflow-hidden rounded-2xl border border-line shadow-xl">
+                      <EmojiPicker
+                        onEmojiClick={addEmoji}
+                        width={320}
+                        height={360}
+                        colorScheme="light"
+                        previewConfig={{ showPreview: false }}
+                      />
+                    </div>
+                  )}
+                </div>
                 <input
+                  ref={inputRef}
                   value={draft}
                   onChange={(event) => handleDraft(event.target.value)}
                   onKeyDown={(event) => event.key === "Enter" && sendMessage()}
