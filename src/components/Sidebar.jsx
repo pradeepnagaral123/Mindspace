@@ -14,6 +14,7 @@ import {
   X,
   Sparkle,
   PenLine,
+  Gamepad2,
   LogOut,
 } from "lucide-react";
 import Avatar from "./Avatar";
@@ -27,6 +28,7 @@ const mainNav = [
   { to: "/check-in", label: "Check-in", icon: ClipboardList },
   { to: "/resources", label: "Resources", icon: BookOpen },
   { to: "/journal", label: "Journal", icon: PenLine },
+  { to: "/games", label: "Games", icon: Gamepad2 },
   { to: "/saved", label: "Saved", icon: Bookmark },
 ];
 

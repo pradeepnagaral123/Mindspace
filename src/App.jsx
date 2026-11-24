@@ -12,6 +12,7 @@ import Saved from "./pages/Saved";
 import SupportCenter from "./pages/SupportCenter";
 import Safety from "./pages/Safety";
 import Journal from "./pages/Journal";
+import Games from "./pages/Games";
 import CheckInHistory from "./pages/CheckInHistory";
 import Helplines from "./pages/Helplines";
 import Profile from "./pages/Profile";
@@ -52,6 +53,7 @@ function App() {
           <Route path="/support" element={<SupportCenter />} />
           <Route path="/safety" element={<Safety />} />
           <Route path="/journal" element={<Journal />} />
+          <Route path="/games" element={<Games />} />
           <Route path="/check-in-history" element={<CheckInHistory />} />
           <Route path="/helplines" element={<Helplines />} />
           <Route path="/profile" element={<Profile />} />
