@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
-  Eye,
   Heart,
+  Layers,
   Pause,
   Play,
   RotateCcw,
   Sparkles,
+  Waves,
   Wind,
 } from "lucide-react";
 import Card from "../components/Card";
@@ -41,44 +42,6 @@ const breathingRoundMs = breathingPhases.reduce(
 const breathingRounds = 5;
 const breathingTotalMs = breathingRoundMs * breathingRounds;
 
-const groundingSteps = [
-  {
-    key: "see",
-    count: 5,
-    title: "Things you can see",
-    hint: "Look around slowly. Notice colours, shapes or small details.",
-    placeholder: "e.g. blue curtain",
-  },
-  {
-    key: "feel",
-    count: 4,
-    title: "Things you can feel",
-    hint: "Notice what your body touches or the temperature around you.",
-    placeholder: "e.g. soft hoodie",
-  },
-  {
-    key: "hear",
-    count: 3,
-    title: "Things you can hear",
-    hint: "Pause for a second and let sounds come to you.",
-    placeholder: "e.g. fan humming",
-  },
-  {
-    key: "smell",
-    count: 2,
-    title: "Things you can smell",
-    hint: "You might need to move closer to notice these.",
-    placeholder: "e.g. coffee",
-  },
-  {
-    key: "taste",
-    count: 1,
-    title: "Things you can taste",
-    hint: "Notice what's left in your mouth, or take a sip of water.",
-    placeholder: "e.g. mint",
-  },
-];
-
 const games = [
   {
     id: "breathing",
@@ -109,32 +72,60 @@ const games = [
     tip: "There is no perfect breath. If anything feels uncomfortable, stop and breathe normally — that counts too.",
   },
   {
-    id: "grounding",
-    title: "5-4-3-2-1 Grounding",
+    id: "ripple",
+    title: "Ripple Garden",
     description:
-      "Find simple things around you: 5 you see, 4 you feel, 3 you hear, 2 you smell and 1 you taste.",
-    meta: "~2 min · 5 steps",
-    icon: Eye,
-    accent: "from-lavender to-blossom text-navy",
+      "Tap the water to make soft ripples spread out and fade. No goal — just a small, satisfying pause.",
+    meta: "No timer · tap freely",
+    icon: Waves,
+    accent: "from-lavender to-mint text-navy",
     softAccent: "bg-lavender-soft text-lavender-deep",
     instructions: [
       {
         number: "1",
-        title: "Stay where you are",
-        text: "No walking around needed. Just notice the room you're in right now.",
+        title: "Tap the water",
+        text: "Tap anywhere, or drag your finger slowly to leave a trail.",
       },
       {
         number: "2",
-        title: "Fill the boxes",
-        text: "Answer each step with anything you notice. Short or silly answers are fine.",
+        title: "Watch it spread",
+        text: "Each tap makes a ripple and a tiny bloom that gently fades away.",
       },
       {
         number: "3",
-        title: "Skip if you're stuck",
-        text: "If you can't think of something, use Skip. There are no wrong answers.",
+        title: "Stay as long as you like",
+        text: "There's no timer and nothing to finish. Leave whenever you want.",
       },
     ],
-    tip: "This gently brings your attention back to the present moment. It's not a test — just noticing.",
+    tip: "No right way to tap. Slower taps feel calmer — and you can stop at any moment.",
+  },
+  {
+    id: "tower",
+    title: "Block Tower",
+    description:
+      "A brick slides above the stack. Click or tap to drop it and keep the tower balanced.",
+    meta: "No timer · score points",
+    icon: Layers,
+    accent: "from-sun to-peach text-navy",
+    softAccent: "bg-sun-soft text-sun-deep",
+    instructions: [
+      {
+        number: "1",
+        title: "Watch the brick",
+        text: "It moves slowly from side to side above the tower.",
+      },
+      {
+        number: "2",
+        title: "Click or tap to drop",
+        text: "The part that lands on the brick below becomes your next brick.",
+      },
+      {
+        number: "3",
+        title: "Keep it balanced",
+        text: "Closer drops score more: 50, 30, 20 or 10. The game ends only when a block has nowhere to land.",
+      },
+    ],
+    tip: "No timer — points are just gentle feedback. Take your time and drop when it feels right.",
   },
 ];
 
@@ -357,7 +348,18 @@ function ResultCard({ title, message, againLabel, onAgain, onBack }) {
   );
 }
 
-function BreathingSession({ paused, phase, secondsLeft, round, sessionSeconds, progress, scale, onPause, onResume, onStop }) {
+function BreathingSession({
+  paused,
+  phase,
+  secondsLeft,
+  round,
+  sessionSeconds,
+  progress,
+  scale,
+  onPause,
+  onResume,
+  onStop,
+}) {
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-center lg:gap-8">
       <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-mint-soft/70 via-white to-lavender-soft/70 p-6">
@@ -379,7 +381,10 @@ function BreathingSession({ paused, phase, secondsLeft, round, sessionSeconds, p
                 >
                   {phase.label}
                 </p>
-                <p aria-hidden="true" className="mt-1 text-[12px] font-medium text-navy/60">
+                <p
+                  aria-hidden="true"
+                  className="mt-1 text-[12px] font-medium text-navy/60"
+                >
                   {secondsLeft}s
                 </p>
               </div>
@@ -532,73 +537,65 @@ function BreathingGame({ onBack }) {
   );
 }
 
-function emptyAnswers() {
-  return Object.fromEntries(
-    groundingSteps.map((step) => [step.key, Array(step.count).fill("")]),
+function RippleGame({ onBack }) {
+  const [ripples, setRipples] = useState([]);
+  const nextId = useRef(0);
+  const lastRippleAt = useRef(0);
+  const timers = useRef([]);
+
+  useEffect(
+    () => () => {
+      timers.current.forEach((timer) => window.clearTimeout(timer));
+    },
+    [],
   );
-}
 
-function GroundingGame({ onBack }) {
-  const [stepIndex, setStepIndex] = useState(0);
-  const [answers, setAnswers] = useState(emptyAnswers);
-  const [finished, setFinished] = useState(false);
+  const pushRipple = (x, y) => {
+    const id = nextId.current;
+    nextId.current += 1;
 
-  const currentStep = groundingSteps[stepIndex];
-  const currentAnswers = answers[currentStep.key];
-  const canContinue = currentAnswers.every((answer) => answer.trim() !== "");
+    setRipples((current) => [
+      ...current.slice(-16),
+      { id, x, y, size: 72 + Math.random() * 48 },
+    ]);
 
-  const updateAnswer = (index, value) => {
-    setAnswers((current) => {
-      const next = [...current[currentStep.key]];
-      next[index] = value;
-      return { ...current, [currentStep.key]: next };
-    });
+    const timer = window.setTimeout(() => {
+      setRipples((current) => current.filter((ripple) => ripple.id !== id));
+    }, 2500);
+    timers.current.push(timer);
   };
 
-  const skipRest = () => {
-    setAnswers((current) => ({
-      ...current,
-      [currentStep.key]: current[currentStep.key].map(
-        (answer) => answer.trim() || "Not sure",
-      ),
-    }));
+  const addRippleFromPointer = (event, force = false) => {
+    const now = Date.now();
+    if (!force && now - lastRippleAt.current < 90) return;
+    lastRippleAt.current = now;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    pushRipple(event.clientX - rect.left, event.clientY - rect.top);
   };
 
-  const nextStep = () => {
-    if (stepIndex === groundingSteps.length - 1) {
-      setFinished(true);
-      return;
-    }
-    setStepIndex((index) => index + 1);
+  const handlePointerMove = (event) => {
+    if (event.pointerType === "mouse" && event.buttons === 0) return;
+    addRippleFromPointer(event);
   };
 
-  const playAgain = () => {
-    setAnswers(emptyAnswers());
-    setStepIndex(0);
-    setFinished(false);
-  };
+  const handleKeyDown = (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
 
-  if (finished) {
-    return (
-      <ResultCard
-        title="Nicely grounded"
-        message="You took a moment to notice what's around you. Carry that small pause with you — no need to force calm."
-        againLabel="Play again"
-        onAgain={playAgain}
-        onBack={onBack}
-      />
-    );
-  }
+    const rect = event.currentTarget.getBoundingClientRect();
+    pushRipple(rect.width / 2, rect.height / 2);
+  };
 
   return (
     <Card className="p-5 sm:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-mint-deep">
-            Step {stepIndex + 1} of {groundingSteps.length}
+            No timer
           </p>
           <h2 className="mt-1 font-display text-xl font-semibold text-ink sm:text-2xl">
-            {currentStep.title}
+            Ripple Garden
           </h2>
         </div>
         <button
@@ -610,69 +607,378 @@ function GroundingGame({ onBack }) {
         </button>
       </div>
 
-      <div className="mt-4 flex gap-2" aria-hidden="true">
-        {groundingSteps.map((step, index) => (
-          <span
-            key={step.key}
-            className={`h-1.5 flex-1 rounded-full ${
-              index <= stepIndex ? "bg-mint-deep" : "bg-line"
-            }`}
-          />
-        ))}
-      </div>
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Tap or drag to make ripples"
+        onPointerDown={(event) => addRippleFromPointer(event, true)}
+        onPointerMove={handlePointerMove}
+        onKeyDown={handleKeyDown}
+        className="relative mt-5 h-[420px] cursor-crosshair select-none overflow-hidden rounded-2xl border border-mint/30 bg-gradient-to-b from-mint-soft via-white to-lavender-soft shadow-inner focus:outline-none focus:ring-2 focus:ring-mint-deep/40"
+        style={{ touchAction: "none" }}
+      >
+        <div className="absolute -top-16 left-1/4 h-56 w-56 rounded-full bg-mint/20 blur-3xl" />
+        <div className="absolute -right-12 -bottom-12 h-56 w-56 rounded-full bg-lavender/20 blur-3xl" />
+        <div className="absolute inset-8 rounded-full border border-mint-deep/10" />
+        <div className="absolute inset-20 rounded-full border border-lavender/15" />
 
-      <p className="mt-5 text-[13px] leading-relaxed text-muted/75">
-        {currentStep.hint}
-      </p>
-
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        {currentAnswers.map((answer, index) => (
-          <label key={`${currentStep.key}-${index}`} className="flex items-center gap-3">
+        {ripples.map((ripple) => (
+          <div
+            key={ripple.id}
+            className="pointer-events-none absolute"
+            style={{ left: ripple.x, top: ripple.y }}
+          >
             <span
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${currentStep.key === "see" ? "bg-mint-soft text-mint-deep" : "bg-lavender-soft text-lavender-deep"}`}
-            >
-              {index + 1}
-            </span>
-            <input
-              type="text"
-              value={answer}
-              onChange={(event) => updateAnswer(index, event.target.value)}
-              placeholder={currentStep.placeholder}
-              autoComplete="off"
-              aria-label={`${currentStep.title}, answer ${index + 1}`}
-              className="min-w-0 flex-1 rounded-xl border border-line bg-white px-4 py-3 text-[13px] text-ink outline-none transition-colors placeholder:text-muted/40 focus:border-mint-deep focus:ring-2 focus:ring-mint/25"
+              className="absolute block rounded-full border border-mint-deep/45"
+              style={{
+                width: ripple.size,
+                height: ripple.size,
+                marginLeft: -ripple.size / 2,
+                marginTop: -ripple.size / 2,
+                animation: "gardenRipple 2400ms ease-out",
+                animationFillMode: "forwards",
+              }}
             />
-          </label>
+            <span
+              className="absolute block rounded-full border border-lavender-deep/30"
+              style={{
+                width: ripple.size * 0.65,
+                height: ripple.size * 0.65,
+                marginLeft: -ripple.size * 0.325,
+                marginTop: -ripple.size * 0.325,
+                animation: "gardenRipple 2400ms ease-out 120ms",
+                animationFillMode: "both",
+              }}
+            />
+            <span
+              className="absolute h-3 w-3 rounded-full bg-mint/80 shadow-[0_0_20px_rgba(165,240,210,0.9)]"
+              style={{
+                left: -6,
+                top: -6,
+                animation: "gardenBloom 2400ms ease-out",
+                animationFillMode: "forwards",
+              }}
+            />
+          </div>
         ))}
+
+        {ripples.length === 0 && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <p className="rounded-full bg-white/75 px-4 py-2 text-[12px] font-semibold text-muted/70 shadow-sm backdrop-blur-sm">
+              Tap anywhere to make a ripple
+            </p>
+          </div>
+        )}
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line/70 pt-5">
-        <div className="flex items-center gap-3">
-          {stepIndex > 0 && (
-            <button
-              onClick={() => setStepIndex((index) => index - 1)}
-              className="flex items-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5 text-[12px] font-semibold text-ink transition-colors hover:bg-cream"
-            >
-              <ArrowLeft size={14} />
-              Previous
-            </button>
-          )}
-          {!canContinue && (
-            <button
-              onClick={skipRest}
-              className="text-[12px] font-semibold text-lavender-deep transition-colors hover:text-ink"
-            >
-              Skip for now
-            </button>
-          )}
-        </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[12px] text-muted/70">
+          Tap slowly. Watch them fade.
+        </p>
         <button
-          onClick={nextStep}
-          disabled={!canContinue}
-          className="flex items-center gap-2 rounded-xl bg-navy px-5 py-3 text-[13px] font-semibold text-white transition-colors hover:bg-navy-2 disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={onBack}
+          className="flex items-center gap-2 rounded-xl border border-line bg-white px-4 py-2.5 text-[12px] font-semibold text-ink transition-colors hover:bg-cream"
         >
-          {stepIndex === groundingSteps.length - 1 ? "Finish" : "Next"}
-          <ArrowRight size={15} />
+          Done for now
+          <ArrowRight size={14} />
+        </button>
+      </div>
+    </Card>
+  );
+}
+
+const TOWER_BASE_WIDTH = 32;
+const TOWER_BLOCK_HEIGHT = 34;
+const TOWER_TOP_Y = 92;
+const TOWER_MIN_OVERLAP = 7;
+const TOWER_SPEED = 0.03;
+
+function getTowerScore(overlapWidth, width, offset) {
+  if (overlapWidth >= width * 0.92 && offset <= width * 0.08) {
+    return { points: 50, label: "Perfect" };
+  }
+  if (overlapWidth >= width * 0.7 && offset <= width * 0.2) {
+    return { points: 30, label: "Great" };
+  }
+  if (overlapWidth >= width * 0.5 && offset <= width * 0.3) {
+    return { points: 20, label: "Good" };
+  }
+  return { points: 10, label: "Nice" };
+}
+
+function BlockTower({ onBack }) {
+  const [blocks, setBlocks] = useState([
+    { id: 0, left: 34, width: TOWER_BASE_WIDTH, dropping: false },
+  ]);
+  const [movingLeft, setMovingLeft] = useState(10);
+  const [currentWidth, setCurrentWidth] = useState(TOWER_BASE_WIDTH);
+  const [frozen, setFrozen] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [score, setScore] = useState(0);
+  const [feedback, setFeedback] = useState(null);
+  const directionRef = useRef(1);
+  const frameRef = useRef(null);
+  const lastFrameRef = useRef(0);
+  const dropTimerRef = useRef(null);
+  const feedbackTimerRef = useRef(null);
+  const nextIdRef = useRef(1);
+
+  useEffect(() => () => {
+    if (frameRef.current) window.cancelAnimationFrame(frameRef.current);
+    if (dropTimerRef.current) window.clearTimeout(dropTimerRef.current);
+    if (feedbackTimerRef.current) window.clearTimeout(feedbackTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (frozen || gameOver) return undefined;
+
+    const step = (time) => {
+      if (!lastFrameRef.current) lastFrameRef.current = time;
+      const delta = Math.min(time - lastFrameRef.current, 32);
+      lastFrameRef.current = time;
+
+      setMovingLeft((current) => {
+        const max = 100 - currentWidth;
+        let next = current + directionRef.current * delta * TOWER_SPEED;
+
+        if (next >= max) {
+          next = max;
+          directionRef.current = -1;
+        } else if (next <= 0) {
+          next = 0;
+          directionRef.current = 1;
+        }
+
+        return next;
+      });
+
+      frameRef.current = window.requestAnimationFrame(step);
+    };
+
+    frameRef.current = window.requestAnimationFrame(step);
+
+    return () => {
+      window.cancelAnimationFrame(frameRef.current);
+      lastFrameRef.current = 0;
+    };
+  }, [frozen, gameOver, currentWidth]);
+
+  const dropBlock = () => {
+    if (frozen || gameOver) return;
+
+    const top = blocks[blocks.length - 1];
+    const overlapLeft = Math.max(movingLeft, top.left);
+    const overlapRight = Math.min(
+      movingLeft + currentWidth,
+      top.left + top.width,
+    );
+    const overlapWidth = overlapRight - overlapLeft;
+    const topCenter = top.left + top.width / 2;
+    const landingOffset = Math.abs(movingLeft + currentWidth / 2 - topCenter);
+
+    if (overlapWidth < TOWER_MIN_OVERLAP) {
+      setGameOver(true);
+      setFrozen(true);
+      setFeedback(null);
+      return;
+    }
+
+    const id = nextIdRef.current;
+    nextIdRef.current += 1;
+    const { points, label } = getTowerScore(
+      overlapWidth,
+      top.width,
+      landingOffset,
+    );
+
+    setBlocks((current) => [
+      ...current,
+      { id, left: overlapLeft, width: overlapWidth, dropping: true },
+    ]);
+    setCurrentWidth(overlapWidth);
+    setMovingLeft(Math.max(0, Math.min(100 - overlapWidth, overlapLeft)));
+    setFrozen(true);
+    setScore((current) => current + points);
+    setFeedback({
+      id,
+      points,
+      label,
+      left: overlapLeft + overlapWidth / 2,
+      top: TOWER_TOP_Y - 34,
+    });
+
+    if (feedbackTimerRef.current) window.clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = window.setTimeout(() => setFeedback(null), 900);
+
+    dropTimerRef.current = window.setTimeout(() => {
+      setBlocks((current) =>
+        current.map((block) =>
+          block.id === id ? { ...block, dropping: false } : block,
+        ),
+      );
+      setFrozen(false);
+    }, 300);
+  };
+
+  const playAgain = () => {
+    if (dropTimerRef.current) window.clearTimeout(dropTimerRef.current);
+    if (feedbackTimerRef.current) window.clearTimeout(feedbackTimerRef.current);
+    setScore(0);
+    setFeedback(null);
+    setBlocks([
+      { id: 0, left: 34, width: TOWER_BASE_WIDTH, dropping: false },
+    ]);
+    setCurrentWidth(TOWER_BASE_WIDTH);
+    setMovingLeft(10);
+    directionRef.current = 1;
+    setFrozen(false);
+    setGameOver(false);
+    nextIdRef.current = 1;
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    dropBlock();
+  };
+
+  const visibleBlocks = blocks.slice(-9);
+
+  return (
+    <Card className="p-5 sm:p-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-sun-deep">
+            Balance practice
+          </p>
+          <h2 className="mt-1 font-display text-xl font-semibold text-ink sm:text-2xl">
+            Block Tower
+          </h2>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="rounded-full bg-sun-soft px-3 py-1.5 text-[12px] font-semibold text-sun-deep">
+            Score {score}
+          </span>
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-[12px] font-semibold text-muted/70 transition-colors hover:text-ink"
+          >
+            <ArrowLeft size={14} />
+            Back to games
+          </button>
+        </div>
+      </div>
+
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label="Click, tap, or press Space to drop the brick"
+        onClick={dropBlock}
+        onKeyDown={handleKeyDown}
+        className="relative mt-5 h-[420px] cursor-pointer overflow-hidden rounded-2xl border border-navy/20 bg-gradient-to-b from-navy via-navy-2 to-navy shadow-inner focus:outline-none focus:ring-2 focus:ring-mint-deep/50"
+      >
+        <div className="absolute inset-x-0 bottom-0 h-3 bg-mint/20" />
+        <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-lavender/10 blur-3xl" />
+        <div className="absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-mint/10 blur-3xl" />
+
+        <div
+          className={`relative h-full w-full origin-bottom-left transition-all duration-700 ${
+            gameOver ? "translate-y-24 rotate-6 opacity-0" : "opacity-100"
+          }`}
+        >
+          {visibleBlocks.map((block, index) => (
+            <div
+              key={block.id}
+              className={`absolute h-[30px] rounded-lg border border-navy/10 bg-gradient-to-r shadow-md transition-[top] duration-500 ${
+                index % 2 === 0
+                  ? "from-mint via-mint-soft to-lavender"
+                  : "from-lavender via-blossom-soft to-mint"
+              }`}
+              style={{
+                left: `${block.left}%`,
+                width: `${block.width}%`,
+                top: `${
+                  TOWER_TOP_Y +
+                  (visibleBlocks.length - 1 - index) * TOWER_BLOCK_HEIGHT
+                }px`,
+                animation: block.dropping ? "brickDrop 300ms ease-in" : undefined,
+              }}
+            />
+          ))}
+        </div>
+
+        {!gameOver && (
+          <div
+            className="absolute top-4 h-8 rounded-lg border border-navy/10 bg-gradient-to-r from-sun via-peach to-blossom shadow-lg transition-opacity"
+            style={{
+              left: `${movingLeft}%`,
+              width: `${currentWidth}%`,
+              opacity: frozen ? 0.65 : 1,
+            }}
+          />
+        )}
+
+        {feedback && (
+          <div
+            key={feedback.id}
+            className="pointer-events-none absolute z-20 rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold text-navy shadow-lg"
+            style={{
+              left: `${feedback.left}%`,
+              top: `${feedback.top}px`,
+              animation: "scorePop 900ms ease-out",
+              animationFillMode: "forwards",
+            }}
+          >
+            +{feedback.points} {feedback.label}
+          </div>
+        )}
+
+        {gameOver && (
+          <div
+            onClick={(event) => event.stopPropagation()}
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center px-6 text-center backdrop-blur-sm"
+          >
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-blossom/20 text-blossom">
+              <Layers size={24} />
+            </span>
+            <h3 className="mt-4 font-display text-xl text-white">
+              No room left
+            </h3>
+            <p className="mt-2 max-w-xs text-[12px] leading-relaxed text-white/70">
+              The next block couldn't find space to land. You scored {score} calm
+              points.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <button
+                onClick={playAgain}
+                className="flex items-center gap-2 rounded-xl bg-mint px-5 py-2.5 text-[12px] font-semibold text-navy transition-colors hover:bg-mint/85"
+              >
+                <RotateCcw size={14} />
+                Try again
+              </button>
+              <button
+                onClick={onBack}
+                className="flex items-center gap-2 rounded-xl border border-white/25 px-5 py-2.5 text-[12px] font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                <ArrowLeft size={14} />
+                Back to games
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[12px] text-muted/70">
+          Click, tap, or press Space to drop. Blocks stacked: {blocks.length - 1}.
+        </p>
+        <button
+          onClick={dropBlock}
+          disabled={frozen || gameOver}
+          className="flex items-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-[12px] font-semibold text-white transition-colors hover:bg-navy-2 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Drop brick
+          <ArrowRight size={14} />
         </button>
       </div>
     </Card>
@@ -711,9 +1017,17 @@ export default function Games() {
     );
   }
 
-  return selectedGame.id === "breathing" ? (
-    <BreathingGame key="breathing" onBack={backToList} />
-  ) : (
-    <GroundingGame key="grounding" onBack={backToList} />
-  );
+  if (selectedGame.id === "breathing") {
+    return <BreathingGame key="breathing" onBack={backToList} />;
+  }
+
+  if (selectedGame.id === "ripple") {
+    return <RippleGame key="ripple" onBack={backToList} />;
+  }
+
+  if (selectedGame.id === "tower") {
+    return <BlockTower key="tower" onBack={backToList} />;
+  }
+
+  return <GameList onSelect={openGame} />;
 }
