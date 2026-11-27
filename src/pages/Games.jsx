@@ -75,7 +75,7 @@ const games = [
     id: "ripple",
     title: "Ripple Garden",
     description:
-      "Tap the water to make soft ripples spread out and fade. No goal — just a small, satisfying pause.",
+      "Tap the pond to make lifelike ripples spread out and fade. No goal — just a small, satisfying pause.",
     meta: "No timer · tap freely",
     icon: Waves,
     accent: "from-lavender to-mint text-navy",
@@ -125,7 +125,7 @@ const games = [
         text: "Closer drops score more: 50, 30, 20 or 10. The game ends only when a block has nowhere to land.",
       },
     ],
-    tip: "No timer — points are just gentle feedback. Take your time and drop when it feels right.",
+    tip: "No timer — points are gentle feedback, and your best score is saved on this device.",
   },
 ];
 
@@ -537,6 +537,12 @@ function BreathingGame({ onBack }) {
   );
 }
 
+const lilyPads = [
+  { left: "14%", top: "68%", width: 58, rotate: -18, bloom: true },
+  { left: "78%", top: "24%", width: 48, rotate: 24, bloom: true },
+  { left: "58%", top: "80%", width: 42, rotate: 8, bloom: false },
+];
+
 function RippleGame({ onBack }) {
   const [ripples, setRipples] = useState([]);
   const nextId = useRef(0);
@@ -556,7 +562,13 @@ function RippleGame({ onBack }) {
 
     setRipples((current) => [
       ...current.slice(-16),
-      { id, x, y, size: 72 + Math.random() * 48 },
+      {
+        id,
+        x,
+        y,
+        size: 64 + Math.random() * 52,
+        tone: Math.random() > 0.5 ? "mint" : "lavender",
+      },
     ]);
 
     const timer = window.setTimeout(() => {
@@ -614,13 +626,58 @@ function RippleGame({ onBack }) {
         onPointerDown={(event) => addRippleFromPointer(event, true)}
         onPointerMove={handlePointerMove}
         onKeyDown={handleKeyDown}
-        className="relative mt-5 h-[420px] cursor-crosshair select-none overflow-hidden rounded-2xl border border-mint/30 bg-gradient-to-b from-mint-soft via-white to-lavender-soft shadow-inner focus:outline-none focus:ring-2 focus:ring-mint-deep/40"
-        style={{ touchAction: "none" }}
+        className="relative mt-5 h-[420px] cursor-crosshair select-none overflow-hidden rounded-2xl border border-mint-deep/25 bg-[#c7ecdc] shadow-inner focus:outline-none focus:ring-2 focus:ring-mint-deep/40"
+        style={{
+          touchAction: "none",
+          backgroundImage:
+            "radial-gradient(circle at 22% 18%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0) 38%), radial-gradient(circle at 78% 82%, rgba(116,190,163,0.35) 0%, rgba(116,190,163,0) 42%), linear-gradient(160deg, #e8f8f1 0%, #c7ecdc 48%, #a9d8c4 100%)",
+          boxShadow:
+            "inset 0 0 90px rgba(45,96,79,0.18), inset 0 0 20px rgba(255,255,255,0.65)",
+        }}
       >
-        <div className="absolute -top-16 left-1/4 h-56 w-56 rounded-full bg-mint/20 blur-3xl" />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-25"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(112deg, rgba(255,255,255,0.35) 0px, rgba(255,255,255,0.35) 1px, transparent 1px, transparent 14px)",
+          }}
+        />
+        <div className="pointer-events-none absolute inset-x-10 top-1/3 h-px bg-white/25" />
+        <div className="pointer-events-none absolute inset-x-16 bottom-1/4 h-px bg-white/20" />
+        <div className="absolute -top-16 left-1/4 h-56 w-56 rounded-full bg-white/25 blur-3xl" />
         <div className="absolute -right-12 -bottom-12 h-56 w-56 rounded-full bg-lavender/20 blur-3xl" />
-        <div className="absolute inset-8 rounded-full border border-mint-deep/10" />
-        <div className="absolute inset-20 rounded-full border border-lavender/15" />
+
+        {lilyPads.map((pad, index) => (
+          <div
+            key={index}
+            className="pointer-events-none absolute"
+            style={{
+              left: pad.left,
+              top: pad.top,
+              width: pad.width,
+              height: pad.width * 0.62,
+              transform: `translate(-50%, -50%) rotate(${pad.rotate}deg)`,
+            }}
+          >
+            <div
+              className="relative h-full w-full"
+              style={{
+                animation: `waterFloat 6s ease-in-out ${index * 1.4}s infinite`,
+              }}
+            >
+              <div
+                className="h-full w-full rounded-full border border-mint-deep/25 bg-gradient-to-br from-mint via-[#8fd7b7] to-[#5fae8d] shadow-[inset_0_2px_6px_rgba(255,255,255,0.35),0_4px_12px_rgba(41,91,73,0.18)]"
+                style={{
+                  clipPath:
+                    "polygon(50% 50%, 100% 0%, 100% 100%, 0% 100%, 0% 0%)",
+                }}
+              />
+              {pad.bloom && (
+                <span className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sun shadow-[0_0_0_3px_rgba(255,255,255,0.55)]" />
+              )}
+            </div>
+          </div>
+        ))}
 
         {ripples.map((ripple) => (
           <div
@@ -628,37 +685,49 @@ function RippleGame({ onBack }) {
             className="pointer-events-none absolute"
             style={{ left: ripple.x, top: ripple.y }}
           >
+            {[1, 0.78, 0.54, 0.3].map((scale, ringIndex) => (
+              <span
+                key={ringIndex}
+                className={`absolute block rounded-full border ${
+                  ringIndex % 2 === 0
+                    ? ripple.tone === "mint"
+                      ? "border-mint-deep/35"
+                      : "border-lavender-deep/30"
+                    : "border-white/60"
+                }`}
+                style={{
+                  width: ripple.size * scale,
+                  height: ripple.size * scale,
+                  marginLeft: (-ripple.size * scale) / 2,
+                  marginTop: (-ripple.size * scale) / 2,
+                  animation: `gardenRipple 2600ms ease-out ${ringIndex * 110}ms`,
+                  animationFillMode: "both",
+                }}
+              />
+            ))}
             <span
-              className="absolute block rounded-full border border-mint-deep/45"
+              className="absolute h-4 w-4 rounded-full bg-white/80 blur-[2px]"
               style={{
-                width: ripple.size,
-                height: ripple.size,
-                marginLeft: -ripple.size / 2,
-                marginTop: -ripple.size / 2,
-                animation: "gardenRipple 2400ms ease-out",
+                left: -8,
+                top: -8,
+                animation: "gardenSplash 900ms ease-out",
                 animationFillMode: "forwards",
               }}
             />
             <span
-              className="absolute block rounded-full border border-lavender-deep/30"
+              className="absolute"
               style={{
-                width: ripple.size * 0.65,
-                height: ripple.size * 0.65,
-                marginLeft: -ripple.size * 0.325,
-                marginTop: -ripple.size * 0.325,
-                animation: "gardenRipple 2400ms ease-out 120ms",
+                animation: "gardenBloom 2600ms ease-out 180ms",
                 animationFillMode: "both",
               }}
-            />
-            <span
-              className="absolute h-3 w-3 rounded-full bg-mint/80 shadow-[0_0_20px_rgba(165,240,210,0.9)]"
-              style={{
-                left: -6,
-                top: -6,
-                animation: "gardenBloom 2400ms ease-out",
-                animationFillMode: "forwards",
-              }}
-            />
+            >
+              <span className="absolute -left-1.5 -top-4 h-3 w-3 rounded-full bg-white/90" />
+              <span className="absolute left-2.5 -top-2 h-3 w-3 rounded-full bg-white/90" />
+              <span className="absolute left-2.5 top-2 h-3 w-3 rounded-full bg-white/90" />
+              <span className="absolute -left-1.5 top-2 h-3 w-3 rounded-full bg-white/90" />
+              <span className="absolute -left-2 -top-1 h-3 w-3 rounded-full bg-white/90" />
+              <span className="absolute -left-1 -top-1 h-2.5 w-2.5 rounded-full bg-sun" />
+            </span>
           </div>
         ))}
 
@@ -692,6 +761,15 @@ const TOWER_BLOCK_HEIGHT = 34;
 const TOWER_TOP_Y = 92;
 const TOWER_MIN_OVERLAP = 7;
 const TOWER_SPEED = 0.03;
+const TOWER_HIGH_SCORE_KEY = "mindspace-block-tower-high-score";
+
+function readTowerHighScore() {
+  try {
+    return Number(window.localStorage.getItem(TOWER_HIGH_SCORE_KEY)) || 0;
+  } catch {
+    return 0;
+  }
+}
 
 function getTowerScore(overlapWidth, width, offset) {
   if (overlapWidth >= width * 0.92 && offset <= width * 0.08) {
@@ -715,8 +793,10 @@ function BlockTower({ onBack }) {
   const [frozen, setFrozen] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(readTowerHighScore);
   const [feedback, setFeedback] = useState(null);
   const directionRef = useRef(1);
+  const previousBestRef = useRef(highScore);
   const frameRef = useRef(null);
   const lastFrameRef = useRef(0);
   const dropTimerRef = useRef(null);
@@ -728,6 +808,17 @@ function BlockTower({ onBack }) {
     if (dropTimerRef.current) window.clearTimeout(dropTimerRef.current);
     if (feedbackTimerRef.current) window.clearTimeout(feedbackTimerRef.current);
   }, []);
+
+  useEffect(() => {
+    if (score <= highScore) return;
+
+    setHighScore(score);
+    try {
+      window.localStorage.setItem(TOWER_HIGH_SCORE_KEY, String(score));
+    } catch {
+      return;
+    }
+  }, [score, highScore]);
 
   useEffect(() => {
     if (frozen || gameOver) return undefined;
@@ -834,6 +925,7 @@ function BlockTower({ onBack }) {
     setFrozen(false);
     setGameOver(false);
     nextIdRef.current = 1;
+    previousBestRef.current = highScore;
   };
 
   const handleKeyDown = (event) => {
@@ -843,6 +935,7 @@ function BlockTower({ onBack }) {
   };
 
   const visibleBlocks = blocks.slice(-9);
+  const isNewBest = score > previousBestRef.current;
 
   return (
     <Card className="p-5 sm:p-8">
@@ -855,9 +948,12 @@ function BlockTower({ onBack }) {
             Block Tower
           </h2>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="rounded-full bg-sun-soft px-3 py-1.5 text-[12px] font-semibold text-sun-deep">
             Score {score}
+          </span>
+          <span className="rounded-full border border-line bg-white px-3 py-1.5 text-[12px] font-semibold text-muted">
+            Best {highScore}
           </span>
           <button
             onClick={onBack}
@@ -946,8 +1042,13 @@ function BlockTower({ onBack }) {
             </h3>
             <p className="mt-2 max-w-xs text-[12px] leading-relaxed text-white/70">
               The next block couldn't find space to land. You scored {score} calm
-              points.
+              points. Best so far: {highScore}.
             </p>
+            {isNewBest && (
+              <span className="mt-3 rounded-full bg-sun px-3 py-1 text-[11px] font-bold text-navy">
+                New best!
+              </span>
+            )}
             <div className="mt-5 flex flex-wrap justify-center gap-3">
               <button
                 onClick={playAgain}
