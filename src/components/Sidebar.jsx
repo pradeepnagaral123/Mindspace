@@ -16,6 +16,7 @@ import {
   PenLine,
   Gamepad2,
   LogOut,
+  FileText,
 } from "lucide-react";
 import Avatar from "./Avatar";
 import { useAuth } from "../context/AuthContext";
@@ -35,6 +36,7 @@ const mainNav = [
 const supportNav = [
   { to: "/support", label: "Support Center", icon: LifeBuoy },
   { to: "/safety", label: "Safety", icon: ShieldCheck },
+  { to: "/terms", label: "Terms & Conditions", icon: FileText },
 ];
 
 function NavItem({ to, label, icon: Icon, onClick }) {

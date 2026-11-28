@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import "../index.css";
@@ -133,20 +133,6 @@ function Landing() {
                 Find Your Community
               </button>
               <a href="#how" className="secondary-btn">How It Works</a>
-            </div>
-
-            <div className="member-row">
-              <div className="avatars">
-                <span>👩🏻</span>
-                <span>👨🏽</span>
-                <span>👩🏾</span>
-                <span>👨🏻</span>
-              </div>
-
-              <p>
-                Join <strong>50,000+ people</strong> finding support and
-                connections every day.
-              </p>
             </div>
           </div>
 
@@ -516,7 +502,8 @@ function Landing() {
 
         <FooterColumn
           title="Legal"
-          links={["Privacy Policy", "Terms of Service", "Cookie Policy"]}
+          links={["Privacy Policy", "Terms & Conditions", "Cookie Policy"]}
+          linkTo={{ "Terms & Conditions": "/terms" }}
         />
 
         <div className="newsletter">
@@ -636,15 +623,15 @@ function SafetyItem({ icon, text }) {
     </div>
   );
 }
-function FooterColumn({ title, links }) {
+function FooterColumn({ title, links, linkTo = {} }) {
   return (
     <div className="footer-column">
       <h4>{title}</h4>
 
       {links.map((link) => (
-        <a href="#" key={link}>
+        <Link to={linkTo[link] || "#"} key={link}>
           {link}
-        </a>
+        </Link>
       ))}
     </div>
   );
@@ -784,8 +771,7 @@ function AuthModal({ mode, setMode, initialError = "", onClose, onSuccess }) {
           ) : (
             <p className="auth-terms">
               By continuing, you agree to our{" "}
-              <a href="#">Community Guidelines</a> and{" "}
-              <a href="#">Privacy Policy</a>.
+              <Link to="/terms">Terms and Conditions</Link>.
             </p>
           )}
 

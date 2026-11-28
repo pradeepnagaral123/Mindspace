@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  Boxes,
   Check,
+  Droplets,
   Heart,
   Layers,
   Pause,
@@ -52,6 +54,9 @@ const games = [
     icon: Wind,
     accent: "from-mint to-lavender text-navy",
     softAccent: "bg-mint-soft text-mint-deep",
+    wash: "from-mint-soft/70 via-transparent to-lavender-soft/50",
+    watermark: "text-mint-deep",
+    backgroundIcons: [Wind, Sparkles],
     instructions: [
       {
         number: "1",
@@ -80,6 +85,9 @@ const games = [
     icon: Waves,
     accent: "from-lavender to-mint text-navy",
     softAccent: "bg-lavender-soft text-lavender-deep",
+    wash: "from-lavender-soft/70 via-transparent to-mint-soft/50",
+    watermark: "text-lavender-deep",
+    backgroundIcons: [Waves, Droplets],
     instructions: [
       {
         number: "1",
@@ -108,6 +116,9 @@ const games = [
     icon: Layers,
     accent: "from-sun to-peach text-navy",
     softAccent: "bg-sun-soft text-sun-deep",
+    wash: "from-sun-soft/70 via-transparent to-peach-soft/50",
+    watermark: "text-sun-deep",
+    backgroundIcons: [Layers, Boxes],
     instructions: [
       {
         number: "1",
@@ -169,42 +180,72 @@ function GameList({ onSelect }) {
       <div className="grid gap-4 sm:grid-cols-2">
         {games.map((game) => {
           const Icon = game.icon;
+          const [PrimaryIcon, SecondaryIcon] = game.backgroundIcons;
           return (
-            <Card key={game.id} className="flex h-full flex-col p-5 sm:p-6">
-              <div className="flex items-start justify-between gap-3">
-                <span
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${game.accent} shadow-lg shadow-navy/5`}
-                >
-                  <Icon size={22} strokeWidth={2} />
-                </span>
-                <span className="rounded-full bg-mint-soft px-2.5 py-1 text-[10px] font-semibold text-mint-deep">
-                  Ready
-                </span>
-              </div>
-              <h2 className="mt-5 font-display text-xl font-semibold text-ink">
-                {game.title}
-              </h2>
-              <p className="mt-2 text-[13px] leading-relaxed text-muted/75">
-                {game.description}
-              </p>
-              <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-6">
-                <span className="text-[11px] font-medium text-muted/60">
-                  {game.meta}
-                </span>
-                <button
-                  onClick={() => onSelect(game.id)}
-                  className="flex items-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-[12px] font-semibold text-white transition-colors hover:bg-navy-2"
-                >
-                  Play now
-                  <ArrowRight size={14} />
-                </button>
+            <Card
+              key={game.id}
+              className="group relative h-full overflow-hidden p-5 sm:p-6"
+            >
+              <div
+                className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${game.wash}`}
+              />
+              <PrimaryIcon
+                className={`pointer-events-none absolute -right-7 -bottom-9 h-44 w-44 -rotate-12 opacity-20 transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105 ${game.watermark}`}
+                strokeWidth={1}
+              />
+              <SecondaryIcon
+                className={`pointer-events-none absolute -top-5 right-16 h-24 w-24 rotate-12 opacity-[0.14] ${game.watermark}`}
+                strokeWidth={1}
+              />
+              <PrimaryIcon
+                className={`pointer-events-none absolute -left-8 top-16 h-20 w-20 rotate-[18deg] opacity-[0.10] ${game.watermark}`}
+                strokeWidth={1}
+              />
+
+              <div className="relative z-10 flex h-full flex-col">
+                <div className="flex items-start justify-between gap-3">
+                  <span
+                    className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${game.accent} shadow-lg shadow-navy/5`}
+                  >
+                    <Icon size={22} strokeWidth={2} />
+                  </span>
+                  <span className="rounded-full bg-mint-soft px-2.5 py-1 text-[10px] font-semibold text-mint-deep">
+                    Ready
+                  </span>
+                </div>
+                <h2 className="mt-5 font-display text-xl font-semibold text-ink">
+                  {game.title}
+                </h2>
+                <p className="mt-2 text-[13px] leading-relaxed text-muted/75">
+                  {game.description}
+                </p>
+                <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-6">
+                  <span className="text-[11px] font-medium text-muted/60">
+                    {game.meta}
+                  </span>
+                  <button
+                    onClick={() => onSelect(game.id)}
+                    className="flex items-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-[12px] font-semibold text-white transition-colors hover:bg-navy-2"
+                  >
+                    Play now
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
               </div>
             </Card>
           );
         })}
 
-        <Card className="border-dashed border-lavender/40 bg-gradient-to-br from-lavender-soft/60 to-cream">
-          <div className="flex h-full flex-col justify-between gap-5 p-5 sm:p-6">
+        <Card className="group relative overflow-hidden border-dashed border-lavender/40 bg-gradient-to-br from-lavender-soft/60 to-cream">
+          <Sparkles
+            className="pointer-events-none absolute -right-6 -bottom-8 h-40 w-40 -rotate-12 text-lavender-deep opacity-[0.18] transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-105"
+            strokeWidth={1}
+          />
+          <Heart
+            className="pointer-events-none absolute right-16 -top-6 h-24 w-24 rotate-12 text-blossom-deep opacity-[0.15]"
+            strokeWidth={1}
+          />
+          <div className="relative z-10 flex h-full flex-col justify-between gap-5 p-5 sm:p-6">
             <div className="flex items-start gap-3">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-lavender/20 text-lavender-deep">
                 <Heart size={20} />
